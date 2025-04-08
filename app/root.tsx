@@ -86,6 +86,9 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     <main className="container mx-auto p-4 pt-16">
       <h1>{message}</h1>
       <p>{details}</p>
+      <Link to="/" className="text-blue-500 underline">
+        Go back
+      </Link>
       {stack && (
         <pre className="w-full overflow-x-auto p-4">
           <code>{stack}</code>

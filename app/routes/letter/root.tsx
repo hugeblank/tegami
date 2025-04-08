@@ -17,6 +17,8 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function loader({ params }: Route.LoaderArgs) {
+  if (!params.letter.match(/[a-z0-9]{10}/))
+    throw new Error("Invalid letter identifier");
   const fullpath = path.join(env.TEGAMI, params.letter, "index.md");
   try {
     return {
