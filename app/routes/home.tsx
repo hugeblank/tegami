@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { prefetch } from "~/lib/prefetch";
 
 export const links: Route.LinksFunction = () => [
-  { rel: "icon", href: "/favicon.svg" },
+  { rel: "icon", href: "/favicon.png" },
 ];
 
 export function meta({}: Route.MetaArgs) {

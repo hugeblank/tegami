@@ -6,13 +6,13 @@ import type { Route } from "./+types/root";
 import Image from "~/components/Image";
 
 export const links: Route.LinksFunction = () => [
-  { rel: "icon", href: "/favicon.svg" },
+  { rel: "icon", href: "/favicon.png" },
 ];
 
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "手紙" },
-    { name: "description", content: "Welcome to my Jebsite!" },
+    { name: "description", content: "A letter for you! あなたのために手紙！" },
   ];
 }
 

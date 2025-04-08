@@ -2,6 +2,7 @@ import "~/app.css";
 import {
   data,
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
   Outlet,
@@ -27,6 +28,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
+        <header className="container mx-auto pt-2">
+          <Link to="/">
+            <div className="align-center flex w-16">
+              <img src="/icon.png" alt="icon"></img>
+              <h1 className="text-3xl font-semibold [writing-mode:vertical-lr]">
+                手紙
+              </h1>
+            </div>
+          </Link>
+        </header>
         <main className="container mx-auto flex flex-col items-center p-4 pt-16">
           {children}
         </main>
