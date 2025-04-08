@@ -9,7 +9,7 @@ export const links: Route.LinksFunction = () => [
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Jebsite" },
+    { title: "手紙" },
     { name: "description", content: "Welcome to my Jebsite!" },
   ];
 }
@@ -36,11 +36,11 @@ export default function Home() {
   const message = useQuery(trpc.hero.message.queryOptions());
 
   return (
-    <main className="container mx-auto flex flex-col items-center p-4 pt-16">
+    <>
       <h1 className="text-4xl">Jebsite</h1>
       <p className="animate-shimmer bg-gradient-to-r from-gray-500 via-gray-300 to-gray-500 bg-[size:200%_100%] bg-clip-text text-sm text-transparent">
         {message.data}
       </p>
-    </main>
+    </>
   );
 }
