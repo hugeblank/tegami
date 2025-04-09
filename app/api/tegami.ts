@@ -16,7 +16,7 @@ export const tegami = router({
       }),
     )
     .output(z.optional(z.string()))
-    .mutation(async ({ input, ctx }) => {
+    .query(async ({ input, ctx }) => {
       const dir = path.join(env.TEGAMI, input.id);
       if (existsSync(dir)) {
         if (isAuthed(ctx.req) || input.key) {
