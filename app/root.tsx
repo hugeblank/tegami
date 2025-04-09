@@ -18,6 +18,10 @@ import {
 } from "~/lib/prefetch";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 
+export const links: Route.LinksFunction = () => [
+  { rel: "icon", href: "/favicon.png" },
+];
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -38,7 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </Link>
         </header>
-        <main className="container mx-auto flex flex-col items-center p-4 pt-16">
+        <main className="container mx-auto flex flex-col items-center p-4 pt-8">
           {children}
         </main>
         <ScrollRestoration />
@@ -83,7 +87,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="container mx-auto p-4 pt-16">
+    <main className="container mx-auto p-4 pt-8">
       <h1>{message}</h1>
       <p>{details}</p>
       <Link to="/" className="text-blue-500 underline">
