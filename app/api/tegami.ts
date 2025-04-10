@@ -61,7 +61,7 @@ export const tegami = router({
       const dir = path.join(env.TEGAMI, input);
       if (existsSync(dir)) {
         const keypath = path.join(dir, ".key");
-        if (!(isAuthed(ctx.req) || !existsSync(keypath))) {
+        if (isAuthed(ctx.req) && existsSync(keypath)) {
           try {
             const fkey = (await readFile(path.join(dir, ".key"))).toString();
             return { ok: true, key: fkey };

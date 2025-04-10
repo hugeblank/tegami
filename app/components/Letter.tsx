@@ -40,6 +40,7 @@ export default function Letter({ id }: { id: string }) {
   const [key, setKeyState] = useState<string | undefined>(undefined);
   const getKeyAsAdmin = useQuery(useTRPC().tegami.getKey.queryOptions(id));
   useEffect(() => {
+    console.log(getKeyAsAdmin.data?.key);
     if (getKeyAsAdmin.data?.key) setKeyState(getKeyAsAdmin.data.key);
     if (!key) {
       const item = localStorage.getItem(lsid);
