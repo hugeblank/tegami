@@ -40,13 +40,12 @@ export default function Letter({ id }: { id: string }) {
   const [key, setKeyState] = useState<string | undefined>(undefined);
   const getKeyAsAdmin = useQuery(useTRPC().tegami.getKey.queryOptions(id));
   useEffect(() => {
-    console.log(getKeyAsAdmin.data?.key);
-    if (getKeyAsAdmin.data?.key) setKeyState(getKeyAsAdmin.data.key);
+    if (getKeyAsAdmin.data) setKeyState(getKeyAsAdmin.data);
     if (!key) {
       const item = localStorage.getItem(lsid);
       if (item) setKeyState(item);
     }
-  }, [getKeyAsAdmin.data?.key, lsid]);
+  }, [getKeyAsAdmin.data, lsid]);
 
   const openLetter = useQuery(openLetterQuery({ id, key }));
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -64,10 +63,10 @@ export default function Letter({ id }: { id: string }) {
   useEffect(() => {
     if (key === undefined || key.length === 0) {
       form.clearErrors("accessKey");
-    } else if (!openLetter.data?.ok && !openLetter.isLoading) {
+    } else if (!(openLetter.data || openLetter.isLoading)) {
       form.setError("accessKey", { message: "Incorrect access key" });
     }
-  }, [key, openLetter.data?.ok, openLetter.isLoading]);
+  }, [key, openLetter.data, openLetter.isLoading]);
 
   if (!id.match(/[a-z0-9]{10}/)) {
     return (
@@ -113,7 +112,7 @@ export default function Letter({ id }: { id: string }) {
     return (
       <article className="prose prose-img:rounded-md prose-code:rounded-md dark:prose-invert sm:prose-sm md:prose-md lg:prose-lg xl:prose-xl">
         <Markdown urlTransform={transform(id, key)} components={components}>
-          {openLetter.data?.data}
+          {openLetter.data}
         </Markdown>
       </article>
     );

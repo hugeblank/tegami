@@ -15,7 +15,7 @@ export const tegami = router({
         key: z.optional(z.string()).nullable(),
       }),
     )
-    .output(z.object({ ok: z.boolean(), data: z.optional(z.string()) }))
+    .output(z.optional(z.string()))
     .query(async ({ input }) => {
       const dir = path.join(env.TEGAMI, input.id);
       if (existsSync(dir)) {
@@ -28,10 +28,7 @@ export const tegami = router({
           }
           if (valid) {
             try {
-              return {
-                ok: true,
-                data: (await readFile(path.join(dir, "index.md"))).toString(),
-              };
+              return (await readFile(path.join(dir, "index.md"))).toString();
             } catch {
               throw new TRPCError({
                 code: "UNPROCESSABLE_CONTENT",
@@ -39,7 +36,7 @@ export const tegami = router({
               });
             }
           } else {
-            return { ok: false };
+            return;
           }
         } catch {
           throw new TRPCError({
@@ -56,7 +53,7 @@ export const tegami = router({
     }),
   getKey: publicProcedure
     .input(z.string())
-    .output(z.object({ ok: z.boolean(), key: z.optional(z.string()) }))
+    .output(z.optional(z.string()))
     .query(async ({ input, ctx }) => {
       const dir = path.join(env.TEGAMI, input);
       if (existsSync(dir)) {
@@ -64,7 +61,7 @@ export const tegami = router({
         if (isAuthed(ctx.req) && existsSync(keypath)) {
           try {
             const fkey = (await readFile(path.join(dir, ".key"))).toString();
-            return { ok: true, key: fkey };
+            return fkey;
           } catch {
             throw new TRPCError({
               code: "UNPROCESSABLE_CONTENT",
@@ -72,7 +69,7 @@ export const tegami = router({
             });
           }
         }
-        return { ok: false };
+        return;
       } else {
         throw new TRPCError({
           code: "NOT_FOUND",

@@ -8,6 +8,6 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export default async function Root({ params }: Route.ComponentProps) {
+export default function Root({ params }: Route.ComponentProps) {
   return <Letter id={params.letter}></Letter>;
 }
