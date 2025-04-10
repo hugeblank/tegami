@@ -1,8 +1,11 @@
-import { Link, redirect } from "react-router";
+import { Link, redirect, useNavigate } from "react-router";
 import type { Route } from "./+types/root";
-import { isAuthed } from "./login";
+import { isAuthed } from "~/api/login";
 import { readdir } from "fs/promises";
 import { env } from "~/util/env";
+import { Button } from "~/components/ui/button";
+import { useTRPC } from "~/lib/trpc";
+import { useMutation } from "@tanstack/react-query";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -19,6 +22,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function Root({ loaderData }: Route.ComponentProps) {
+  const createLetter = useMutation(useTRPC().tegami.create.mutationOptions());
+  const navigate = useNavigate();
+  async function initLetter() {
+    navigate("/admin/" + (await createLetter.mutateAsync()));
+  }
+
   const links = loaderData.map((name, i) => {
     return (
       <Link
@@ -31,9 +40,10 @@ export default function Root({ loaderData }: Route.ComponentProps) {
     );
   });
   return (
-    <>
-      <h1 className="bold pb-4 text-4xl">Your Letters</h1>
+    <main className="container mx-auto flex flex-col items-center p-4 pt-8">
+      <Button onClick={initLetter}>Create Letter</Button>
+      <h1 className="bold py-4 text-4xl">Your Letters</h1>
       {links}
-    </>
+    </main>
   );
 }

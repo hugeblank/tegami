@@ -4,7 +4,7 @@ import { readFile } from "fs/promises";
 import { fileTypeFromBuffer } from "file-type";
 import type { Route } from "./+types/root";
 import { existsSync } from "fs";
-import { isAuthed } from "../admin/login";
+import { isAuthed } from "~/api/login";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const fullpath = path.join(env.TEGAMI, params.letter, params.file);

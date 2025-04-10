@@ -1,11 +1,6 @@
 import { type HTMLProps } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
 export default function Image(props: HTMLProps<HTMLImageElement>) {
   return (
@@ -13,10 +8,8 @@ export default function Image(props: HTMLProps<HTMLImageElement>) {
       <DialogTrigger asChild>
         <img {...props} />
       </DialogTrigger>
-      <DialogContent className="mx-auto flex h-11/12 w-11/12 flex-col sm:max-w-[unset]">
-        <DialogHeader>
-          <DialogTitle>{props.alt}</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="flex h-11/12 w-11/12 flex-col sm:max-w-[unset]">
+        <DialogDescription>{props.alt}</DialogDescription>
         <img {...props} className="h-full w-full object-scale-down" />
       </DialogContent>
     </Dialog>

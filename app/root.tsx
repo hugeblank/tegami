@@ -22,6 +22,8 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.png" },
 ];
 
+export const headerHeight = 17;
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -32,7 +34,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <header className="container mx-auto pt-2">
+        <header className={`container mx-auto pt-2 h-${headerHeight}`}>
           <Link to="/">
             <div className="align-center flex w-16">
               <img src="/icon.png" alt="icon"></img>
@@ -42,9 +44,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </Link>
         </header>
-        <main className="container mx-auto flex flex-col items-center p-4 pt-8">
-          {children}
-        </main>
+        {children}
         <ScrollRestoration />
         <Scripts />
       </body>
