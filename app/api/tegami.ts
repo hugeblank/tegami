@@ -12,29 +12,71 @@ export const tegami = router({
     .input(
       z.object({
         id: z.string(),
-        key: z.string(),
+        key: z.optional(z.string()).nullable(),
       }),
     )
-    .output(z.optional(z.string()))
-    .query(async ({ input, ctx }) => {
+    .output(z.object({ ok: z.boolean(), data: z.optional(z.string()) }))
+    .query(async ({ input }) => {
       const dir = path.join(env.TEGAMI, input.id);
       if (existsSync(dir)) {
-        if (isAuthed(ctx.req) || input.key) {
-          try {
-            return (await readFile(path.join(dir, "index.md"))).toString();
-          } catch {
-            throw new TRPCError({
-              code: "UNPROCESSABLE_CONTENT",
-              message: `Invalid index.md for letter id ${input.id}`,
-            });
+        try {
+          const keypath = path.join(dir, ".key");
+          let valid = !existsSync(keypath);
+          if (!valid) {
+            const fkey = (await readFile(path.join(dir, ".key"))).toString();
+            valid = fkey === input.key;
           }
-        } else {
-          throw new TRPCError({ code: "UNAUTHORIZED" });
+          if (valid) {
+            try {
+              return {
+                ok: true,
+                data: (await readFile(path.join(dir, "index.md"))).toString(),
+              };
+            } catch {
+              throw new TRPCError({
+                code: "UNPROCESSABLE_CONTENT",
+                message: `Invalid index.md for letter ${input.id}`,
+              });
+            }
+          } else {
+            return { ok: false };
+          }
+        } catch {
+          throw new TRPCError({
+            code: "UNPROCESSABLE_CONTENT",
+            message: `Error parsing key for letter ${input.id}`,
+          });
         }
       } else {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: `No such letter with id ${input.id}`,
+        });
+      }
+    }),
+  getKey: publicProcedure
+    .input(z.string())
+    .output(z.object({ ok: z.boolean(), key: z.optional(z.string()) }))
+    .query(async ({ input, ctx }) => {
+      const dir = path.join(env.TEGAMI, input);
+      if (existsSync(dir)) {
+        const keypath = path.join(dir, ".key");
+        if (!(isAuthed(ctx.req) || !existsSync(keypath))) {
+          try {
+            const fkey = (await readFile(path.join(dir, ".key"))).toString();
+            return { ok: true, key: fkey };
+          } catch {
+            throw new TRPCError({
+              code: "UNPROCESSABLE_CONTENT",
+              message: `Error parsing key for letter ${input}`,
+            });
+          }
+        }
+        return { ok: false };
+      } else {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `No such letter with id ${input}`,
         });
       }
     }),

@@ -1,19 +1,28 @@
 import Markdown, { defaultUrlTransform } from "react-markdown";
 import Image from "./Image";
 import { useTRPC } from "~/lib/trpc";
-import { skipToken, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { useState } from "react";
-import { Form } from "react-router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FormControl, FormField, FormItem, FormLabel } from "./ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./ui/form";
+import { useEffect, useState } from "react";
+import { Link } from "react-router";
 
-function transform(id: string, key: string): (url: string) => string {
+function transform(id: string, key?: string): (url: string) => string {
   return (url: string) =>
-    defaultUrlTransform(`/media/${id}/${url.replace(/^\.\//, "")}?key=${key}`);
+    defaultUrlTransform(
+      `/media/${id}/${url.replace(/^\.\//, "")}${key ? `?key=${key}` : ""}`,
+    );
 }
 
 const components = {
@@ -25,12 +34,20 @@ const FormSchema = z.object({
 });
 
 export default function Letter({ id }: { id: string }) {
-  if (!id.match(/[a-z0-9]{10}/)) throw new Error("Invalid letter identifier");
   const openLetterQuery = useTRPC().tegami.open.queryOptions;
   const lsid = `letter-${id}`;
-  const [key, setKeyState] = useState(localStorage.getItem(lsid));
-  const openLetter = useQuery(openLetterQuery(key ? { id, key } : skipToken));
 
+  const [key, setKeyState] = useState<string | undefined>(undefined);
+  const getKeyAsAdmin = useQuery(useTRPC().tegami.getKey.queryOptions(id));
+  useEffect(() => {
+    if (getKeyAsAdmin.data?.key) setKeyState(getKeyAsAdmin.data.key);
+    if (!key) {
+      const item = localStorage.getItem(lsid);
+      if (item) setKeyState(item);
+    }
+  }, [getKeyAsAdmin.data?.key, lsid]);
+
+  const openLetter = useQuery(openLetterQuery({ id, key }));
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -43,33 +60,61 @@ export default function Letter({ id }: { id: string }) {
     localStorage.setItem(lsid, data.accessKey);
   }
 
-  return !key ? (
-    <>
-      <div className="flex">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <FormField
-              control={form.control}
-              name="accessKey"
-              render={({ field }) => (
+  useEffect(() => {
+    if (key === undefined || key.length === 0) {
+      form.clearErrors("accessKey");
+    } else if (!openLetter.data?.ok && !openLetter.isLoading) {
+      form.setError("accessKey", { message: "Incorrect access key" });
+    }
+  }, [key, openLetter.data?.ok, openLetter.isLoading]);
+
+  if (!id.match(/[a-z0-9]{10}/)) {
+    return (
+      <>
+        <h2 className="text-size-16 text-red-500">Invalid letter ID</h2>
+        <Link to="/">Go back</Link>
+      </>
+    );
+  }
+
+  if (!key) {
+    return (
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <FormField
+            control={form.control}
+            name="accessKey"
+            render={({ field }) => {
+              return (
                 <FormItem>
                   <FormLabel>Key</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Access Key" {...field} />
-                  </FormControl>
+                  <div className="flex sm:flex-col md:flex-row">
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Access Key"
+                        {...field}
+                      />
+                    </FormControl>
+                    <Button className="sm:mt-2 md:mt-0 md:ml-2" type="submit">
+                      Submit
+                    </Button>
+                  </div>
+                  <FormMessage />
                 </FormItem>
-              )}
-            />
-            <Button type="submit"></Button>
-          </form>
-        </Form>
-      </div>
-    </>
-  ) : (
-    <article className="prose prose-img:rounded-md prose-code:rounded-md dark:prose-invert sm:prose-sm md:prose-md lg:prose-lg xl:prose-xl">
-      <Markdown urlTransform={transform(id, key)} components={components}>
-        {openLetter.data}
-      </Markdown>
-    </article>
-  );
+              );
+            }}
+          />
+        </form>
+      </Form>
+    );
+  } else {
+    return (
+      <article className="prose prose-img:rounded-md prose-code:rounded-md dark:prose-invert sm:prose-sm md:prose-md lg:prose-lg xl:prose-xl">
+        <Markdown urlTransform={transform(id, key)} components={components}>
+          {openLetter.data?.data}
+        </Markdown>
+      </article>
+    );
+  }
 }
