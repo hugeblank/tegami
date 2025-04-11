@@ -1,5 +1,5 @@
 import { defaultUrlTransform } from "react-markdown";
-import Image from "./Image";
+import ImageDialog from "./ImageDialog";
 import { useTRPC } from "~/lib/trpc";
 import { useQuery } from "@tanstack/react-query";
 import Prose from "./Prose";
@@ -12,7 +12,7 @@ export function transform(id: string, key?: string): (url: string) => string {
 }
 
 export const components = {
-  img: Image,
+  img: ImageDialog,
 };
 
 export default function Letter({

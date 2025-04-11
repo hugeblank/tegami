@@ -5,8 +5,10 @@ import path from "node:path";
 import { env } from "~/util/env";
 import { existsSync } from "node:fs";
 import { TRPCError } from "@trpc/server";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { checkKey } from "./key";
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { checkKey } from "../util/key";
+import { findPath } from "~/util/naming";
+import { fileTypeFromBuffer } from "file-type";
 
 export const tegami = router({
   exists: publicProcedure
@@ -118,7 +120,7 @@ export const tegami = router({
     if (!isAuthed(ctx.req)) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
-    const [dir, id] = findPath();
+    const [dir, id] = findPath(env.TEGAMI);
     try {
       await mkdir(dir);
       await writeFile(path.join(dir, "index.md"), "");
@@ -139,7 +141,7 @@ export const tegami = router({
       }),
     )
     .output(z.boolean())
-    .mutation(({ input, ctx }) => {
+    .mutation(async ({ input, ctx }) => {
       if (!isAuthed(ctx.req)) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
@@ -151,8 +153,13 @@ export const tegami = router({
         });
       }
       try {
-        writeFile(path.join(dir, "index.md"), input.letter);
-        if (input.key) writeFile(path.join(dir, ".key"), input.key);
+        await writeFile(path.join(dir, "index.md"), input.letter);
+        const keypath = path.join(dir, ".key");
+        if (input.key) {
+          await writeFile(keypath, input.key);
+        } else if (existsSync(keypath)) {
+          await rm(keypath);
+        }
         return true;
       } catch (e) {
         throw new TRPCError({
@@ -161,13 +168,54 @@ export const tegami = router({
         });
       }
     }),
+  listMedia: publicProcedure
+    .input(z.string())
+    .output(z.array(z.object({ name: z.string(), type: z.string() })))
+    .query(async ({ ctx, input }) => {
+      if (!isAuthed(ctx.req)) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+      const p = path.join(env.TEGAMI, input);
+      const dir = await readdir(p);
+      return await Promise.all(
+        dir
+          .filter((v) => !(v === "index.md" || v === ".key"))
+          .map(async (v) => {
+            const res = await fileTypeFromBuffer(
+              await readFile(path.join(p, v)),
+            );
+            return {
+              name: v,
+              type: res ? res.mime : "text/plain",
+            };
+          }),
+      );
+    }),
+  delete: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+      }),
+    )
+    .output(z.boolean())
+    .mutation(async ({ input, ctx }) => {
+      if (!isAuthed(ctx.req)) throw new TRPCError({ code: "UNAUTHORIZED" });
+      if (
+        !(
+          input.id.match(/[0-9a-f]{10}/) ||
+          input.name.match(/[0-9a-f]{10}\.[0-9a-z]{2:4}/)
+        )
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Malformed letter ID or media file name",
+        });
+      }
+      await rm(path.join(env.TEGAMI, input.id, input.name));
+      return true;
+    }),
+  isAuthed: publicProcedure.output(z.boolean()).query(({ ctx }) => {
+    return isAuthed(ctx.req);
+  }),
 });
-
-function findPath(): [string, string] {
-  while (true) {
-    const arr = crypto.getRandomValues(new Uint8Array(5));
-    const id = Buffer.from(arr).toString("hex");
-    const dir = path.join(env.TEGAMI, id);
-    if (!existsSync(dir)) return [dir, id];
-  }
-}

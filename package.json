@@ -28,6 +28,8 @@
     "clsx": "^2.1.1",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.41.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "file-type": "^20.4.1",
     "isbot": "^5.1.25",
     "lucide-react": "^0.487.0",

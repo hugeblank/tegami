@@ -1,17 +1,39 @@
 import { components, transform } from "~/components/Letter";
 import type { Route } from "./+types/editor";
 import { isAuthed } from "~/api/login";
-import { checkKey } from "~/api/key";
+import { checkKey } from "~/util/key";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "~/lib/trpc";
-import { Link } from "react-router";
+import { Link, redirect, type ActionFunctionArgs } from "react-router";
 import Prose from "~/components/Prose";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { headerHeight } from "~/root";
-import Editor, { createForm, type EditorSchema } from "~/components/Editor";
+import Editor, { useEditorForm, type EditorSchema } from "~/components/Editor";
+import { useWatch } from "react-hook-form";
+import { writeFile } from "fs/promises";
+import path from "path";
+import { fileTypeFromBuffer } from "file-type";
+import { env } from "~/util/env";
+import { findPath } from "~/util/naming";
+
+export async function action({ request, params }: ActionFunctionArgs) {
+  if (!isAuthed(request)) throw new Response("Unauthorized", { status: 400 });
+  const formData = await request.formData();
+  const entry = formData.get("media") as File | null;
+  if (entry) {
+    const buf = await entry.arrayBuffer();
+    const type = await fileTypeFromBuffer(buf);
+    const ext = "." + (type ? type.ext : "bin");
+    const [partialPath] = findPath(
+      path.join(env.TEGAMI, params["letter"]!),
+      ext,
+    );
+    await writeFile(partialPath, Buffer.from(buf));
+  }
+}
 
 export async function loader({ params, request }: Route.LoaderArgs) {
-  if (!isAuthed(request)) throw new Response("Unauthorized", { status: 401 });
+  if (!isAuthed(request)) throw redirect("/login");
   const check = await checkKey(params.letter, request);
   if (check) {
     return check;
@@ -42,22 +64,32 @@ export default function EditorRoute({
     trpc.tegami.open.queryOptions({ id: params.letter, key: loaderData.key }),
   );
 
-  const form = createForm();
+  const form = useEditorForm();
+  const text = useWatch<EditorSchema>({ control: form.control, name: "text" });
+  const key = useWatch<EditorSchema>({ control: form.control, name: "key" });
+
+  const [timer, setTimer] = useState<NodeJS.Timeout | undefined>();
+
+  useEffect(() => {
+    if (timer) clearTimeout(timer);
+    setTimer(
+      setTimeout(() => {
+        if (text)
+          saveLetter.mutateAsync({
+            id: params.letter,
+            key: key.length > 0 ? key : undefined,
+            letter: text,
+          });
+      }, 1000),
+    );
+  }, [text, key, params.letter, saveLetter.mutateAsync, timer]);
 
   useEffect(() => {
     if (openLetter.isSuccess) {
       form.setValue("text", openLetter.data);
-      form.setValue("key", loaderData.key);
+      form.setValue("key", loaderData.key ?? "");
     }
-  }, [openLetter.data, openLetter.isSuccess]);
-
-  async function onSubmit(data: EditorSchema) {
-    saveLetter.mutateAsync({
-      id: params.letter,
-      key: data.key,
-      letter: data.text,
-    });
-  }
+  }, [openLetter.data, openLetter.isSuccess, form, loaderData.key]);
 
   useEffect(() => {
     if (saveLetter.isError) {
@@ -66,7 +98,7 @@ export default function EditorRoute({
       });
       form.setValue("save", "❌");
     }
-  }, [saveLetter.error, saveLetter.isError]);
+  }, [saveLetter.error, saveLetter.isError, form]);
 
   useEffect(() => {
     if (saveLetter.isPending) form.setValue("save", "⏳");
@@ -91,17 +123,21 @@ export default function EditorRoute({
   } else {
     return (
       <main
-        className={`xl:mx-16 h-[calc(100vh-calc(${headerHeight}rem/4)))] flex flex-col items-center p-4 pt-8`}
+        className={`xl:mx-16 h-[calc(100vh_-_(${headerHeight}rem_/_4))] flex flex-col items-center p-4 pt-8`}
       >
         <div className="flex h-full w-full gap-4">
           <Prose
-            articleClass="mx-20 h-full overflow-y-auto"
+            articleClass="mx-20 w-1/2 h-full overflow-y-auto"
             urlTransform={transform(params.letter, loaderData.key)}
             components={components}
           >
-            {form.watch("text")}
+            {text}
           </Prose>
-          <Editor form={form} onSubmit={onSubmit}></Editor>
+          <Editor
+            id={params.letter}
+            accessKey={key.length > 0 ? key : undefined}
+            form={form}
+          ></Editor>
         </div>
       </main>
     );

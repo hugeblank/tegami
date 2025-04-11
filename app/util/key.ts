@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 import { readFile } from "fs/promises";
 import path from "path";
-import { isAuthed } from "./login";
+import { isAuthed } from "../api/login";
 import { env } from "~/util/env";
 
 type KeyCheck = { has: boolean; key?: string };

@@ -35,14 +35,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <header className={`container mx-auto pt-2 h-${headerHeight}`}>
-          <Link to="/">
-            <div className="align-center flex w-16">
-              <img src="/icon.png" alt="icon"></img>
-              <h1 className="text-3xl font-semibold [writing-mode:vertical-lr]">
+          <div className="flex flex-row justify-between">
+            <Link className="align-center inline-flex" to="/">
+              <img className="w-16" src="/icon.png" alt="icon"></img>
+              <h1 className="block text-3xl font-semibold [writing-mode:vertical-lr]">
                 手紙
               </h1>
-            </div>
-          </Link>
+            </Link>
+            <Link to="/admin">
+              <h1 className="block text-3xl font-semibold text-red-300">
+                Admin
+              </h1>
+            </Link>
+          </div>
         </header>
         {children}
         <ScrollRestoration />

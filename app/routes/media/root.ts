@@ -22,7 +22,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     try {
       const buf = await readFile(fullpath);
       const response = new Response(buf);
-      const type = await fileTypeFromBuffer(new Uint8Array(buf));
+      const type = await fileTypeFromBuffer(buf);
       response.headers.append(
         "Content-Type",
         type?.mime ?? "application/unknown",
