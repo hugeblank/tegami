@@ -5,23 +5,10 @@ import { checkKey } from "~/api/key";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "~/lib/trpc";
 import { Link } from "react-router";
-import { Textarea } from "~/components/ui/textarea";
 import Prose from "~/components/Prose";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "~/components/ui/form";
-import { Button } from "~/components/ui/button";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "~/components/ui/input";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { headerHeight } from "~/root";
+import Editor, { createForm, type EditorSchema } from "~/components/Editor";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   if (!isAuthed(request)) throw new Response("Unauthorized", { status: 401 });
@@ -41,12 +28,10 @@ function error(message: string) {
   );
 }
 
-const FormSchema = z.object({
-  text: z.string(),
-  key: z.string().optional(),
-});
-
-export default function Editor({ params, loaderData }: Route.ComponentProps) {
+export default function EditorRoute({
+  params,
+  loaderData,
+}: Route.ComponentProps) {
   const trpc = useTRPC();
 
   const letterExists = useQuery(trpc.tegami.exists.queryOptions(params.letter));
@@ -57,26 +42,16 @@ export default function Editor({ params, loaderData }: Route.ComponentProps) {
     trpc.tegami.open.queryOptions({ id: params.letter, key: loaderData.key }),
   );
 
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
-      text: "",
-    },
-  });
-
-  const [text, setText] = useState("");
-  const [key, setKey] = useState(loaderData.key);
-  const [saved, setSaved] = useState("✅"); //⏳❌✏️
-  const [inputType, setInputType] = useState<string | undefined>("password");
+  const form = createForm();
 
   useEffect(() => {
-    if (openLetter.data) {
+    if (openLetter.isSuccess) {
       form.setValue("text", openLetter.data);
-      setText(openLetter.data);
+      form.setValue("key", loaderData.key);
     }
-  }, [openLetter.data]);
+  }, [openLetter.data, openLetter.isSuccess]);
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: EditorSchema) {
     saveLetter.mutateAsync({
       id: params.letter,
       key: data.key,
@@ -89,27 +64,17 @@ export default function Editor({ params, loaderData }: Route.ComponentProps) {
       form.setError("root", {
         message: `Failed to save letter: ${saveLetter.error}`,
       });
-      setSaved("❌");
+      form.setValue("save", "❌");
     }
   }, [saveLetter.error, saveLetter.isError]);
 
   useEffect(() => {
-    if (saveLetter.isPending) setSaved("⏳");
+    if (saveLetter.isPending) form.setValue("save", "⏳");
     if (saveLetter.isSuccess) {
       form.clearErrors();
-      setSaved("✅");
+      form.setValue("save", "✅");
     }
   }, [saveLetter.isPending, saveLetter.isSuccess]);
-
-  function onTextUpdate(e: React.CompositionEvent<HTMLTextAreaElement>) {
-    setText(e.currentTarget.value);
-    if (saved !== "✏️") setSaved("✏️");
-  }
-
-  function onKeyUpdate(e: React.CompositionEvent<HTMLInputElement>) {
-    setKey(e.currentTarget.value);
-    if (saved !== "✏️") setSaved("✏️");
-  }
 
   if (!params.letter.match(/[a-z0-9]{10}/)) {
     return error("Invalid Letter ID");
@@ -129,71 +94,14 @@ export default function Editor({ params, loaderData }: Route.ComponentProps) {
         className={`xl:mx-16 h-[calc(100vh-calc(${headerHeight}rem/4)))] flex flex-col items-center p-4 pt-8`}
       >
         <div className="flex h-full w-full gap-4">
-          {/* <ScrollArea className="w-1/2"> */}
           <Prose
             articleClass="mx-20 h-full overflow-y-auto"
             urlTransform={transform(params.letter, loaderData.key)}
             components={components}
           >
-            {text}
+            {form.watch("text")}
           </Prose>
-          {/* </ScrollArea> */}
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="w-1/2">
-              <div className="flex h-full w-full flex-col">
-                <FormMessage />
-                <div className="mx-4 mb-2 flex flex-row gap-4">
-                  <p className="place-self-center">{saved}</p>
-                  <Button type="submit">Save</Button>
-                  <FormField
-                    control={form.control}
-                    name="key"
-                    render={({ field }) => {
-                      return (
-                        <FormItem className="flex gap-1">
-                          <FormLabel>Key:</FormLabel>
-                          <FormControl>
-                            <Input
-                              className="w-fit"
-                              placeholder="Access Key"
-                              type={inputType}
-                              onFocus={() => setInputType(undefined)}
-                              {...field}
-                              onBlur={() => {
-                                setInputType("password");
-                                field.onBlur();
-                              }}
-                              onInput={onKeyUpdate}
-                              value={key}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      );
-                    }}
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="text"
-                  render={({ field }) => {
-                    return (
-                      <FormItem className="h-full">
-                        <FormControl>
-                          <Textarea
-                            className="h-full"
-                            placeholder="What's going on?"
-                            onCompositionUpdate={onTextUpdate}
-                            onInput={onTextUpdate}
-                            {...field}
-                          ></Textarea>
-                        </FormControl>
-                      </FormItem>
-                    );
-                  }}
-                />
-              </div>
-            </form>
-          </Form>
+          <Editor form={form} onSubmit={onSubmit}></Editor>
         </div>
       </main>
     );
