@@ -29,20 +29,27 @@ export default function Unlock({
     React.Dispatch<React.SetStateAction<string | undefined>>,
   ];
 }) {
-  const trpc = useTRPC();
+  const { checkKey, unlock } = useTRPC().tegami;
   const lsid = `letter-${id}`;
   const [access, setAccess] = accessState;
 
-  const checkKey = useQuery(trpc.tegami.checkKey.queryOptions(id));
+  const {
+    isSuccess: checkKeySuccess,
+    data: keyResult,
+    isLoading: checkKeyLoading,
+  } = useQuery(checkKey.queryOptions(id));
+
+  // Attempt to load key from localStorage
   useEffect(() => {
-    if (checkKey.isSuccess) setAccess(checkKey.data.key);
+    if (checkKeySuccess) setAccess(keyResult.key);
     const item = localStorage.getItem(lsid);
     if (item) setAccess(item);
-  }, [checkKey.isSuccess, checkKey.data, lsid]);
+  }, [checkKeySuccess, keyResult, lsid, setAccess]);
 
-  const unlockLetter = useQuery(
-    trpc.tegami.unlock.queryOptions({ id, key: access }),
+  const { data: unlockedLetter, isLoading: letterLoading } = useQuery(
+    unlock.queryOptions({ id, key: access }),
   );
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -50,29 +57,30 @@ export default function Unlock({
     },
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    setAccess(data.accessKey);
-    localStorage.setItem(lsid, data.accessKey);
-  }
-
+  // If the key from localStorage fails, handle form
   useEffect(() => {
-    if (unlockLetter.data === false && localStorage.getItem(lsid) !== null) {
+    if (unlockedLetter === false && localStorage.getItem(lsid) !== null) {
       localStorage.removeItem(lsid);
       setAccess(undefined);
     }
 
     if (!access || access.length === 0) {
       form.clearErrors("accessKey");
-    } else if (!(unlockLetter.data || unlockLetter.isLoading)) {
+    } else if (!(unlockedLetter || letterLoading)) {
       form.setError("accessKey", { message: "Incorrect access key" });
     }
-  }, [access, unlockLetter.data, unlockLetter.isLoading]);
+  }, [access, setAccess, form, lsid, unlockedLetter, letterLoading]);
 
-  if (!access && (checkKey.isLoading || unlockLetter.isLoading)) {
+  if (!access && (checkKeyLoading || letterLoading)) {
     return <p>Loading...</p>;
   }
 
-  if (!access && checkKey.data?.has) {
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    setAccess(data.accessKey);
+    localStorage.setItem(lsid, data.accessKey);
+  }
+
+  if (!access && keyResult?.has) {
     return (
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>

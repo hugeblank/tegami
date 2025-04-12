@@ -6,18 +6,11 @@ import { env } from "~/util/env";
 import { existsSync } from "node:fs";
 import { TRPCError } from "@trpc/server";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
-import { checkKey } from "../util/key";
+import { checkKey } from "../util/misc";
 import { findPath } from "~/util/naming";
 import { fileTypeFromBuffer } from "file-type";
 
 export const tegami = router({
-  exists: publicProcedure
-    .input(z.string())
-    .output(z.boolean())
-    .query(({ input }) => {
-      const dir = path.join(env.TEGAMI, input);
-      return existsSync(dir);
-    }),
   unlock: publicProcedure
     .input(
       z.object({
@@ -215,7 +208,4 @@ export const tegami = router({
       await rm(path.join(env.TEGAMI, input.id, input.name));
       return true;
     }),
-  isAuthed: publicProcedure.output(z.boolean()).query(({ ctx }) => {
-    return isAuthed(ctx.req);
-  }),
 });

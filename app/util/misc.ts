@@ -25,3 +25,8 @@ export async function checkKey(
     }
   }
 }
+export function letterExists(id: string) {
+  const dir = path.join(env.TEGAMI, id);
+  return existsSync(dir);
+}
+export const headerHeight = 17;

@@ -1,13 +1,14 @@
 import { components, transform } from "~/components/Letter";
 import type { Route } from "./+types/editor";
 import { isAuthed } from "~/api/login";
-import { checkKey } from "~/util/key";
+import { checkKey } from "~/util/misc";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useAsyncDebouncer } from "@tanstack/react-pacer";
 import { useTRPC } from "~/lib/trpc";
-import { Link, redirect, type ActionFunctionArgs } from "react-router";
+import { redirect, type ActionFunctionArgs } from "react-router";
 import Prose from "~/components/Prose";
-import { useEffect, useState } from "react";
-import { headerHeight } from "~/root";
+import { useEffect } from "react";
+import { headerHeight } from "~/util/misc";
 import Editor, { useEditorForm, type EditorSchema } from "~/components/Editor";
 import { useWatch } from "react-hook-form";
 import { writeFile } from "fs/promises";
@@ -35,86 +36,78 @@ export async function action({ request, params }: ActionFunctionArgs) {
 export async function loader({ params, request }: Route.LoaderArgs) {
   if (!isAuthed(request)) throw redirect("/login");
   const check = await checkKey(params.letter, request);
+  // checkKey implicitly checks if letter exists
   if (check) {
     return check;
   }
   throw new Response("Not found", { status: 404 });
 }
 
-function error(message: string) {
-  return (
-    <>
-      <h2 className="text-2xl text-red-500">{message}</h2>
-      <Link to="/">Go back</Link>
-    </>
-  );
-}
-
 export default function EditorRoute({
   params,
   loaderData,
 }: Route.ComponentProps) {
-  const trpc = useTRPC();
-
-  const letterExists = useQuery(trpc.tegami.exists.queryOptions(params.letter));
-
-  const saveLetter = useMutation(trpc.tegami.save.mutationOptions());
-
-  const openLetter = useQuery(
-    trpc.tegami.open.queryOptions({ id: params.letter, key: loaderData.key }),
-  );
+  const { save, open } = useTRPC().tegami;
+  const {
+    isError: saveLetterErrored,
+    isPending: saveLetterPending,
+    isSuccess: saveLetterSuccess,
+    mutateAsync: saveLetterAsync,
+    error: saveLetterError,
+  } = useMutation(save.mutationOptions());
+  const {
+    isSuccess: isOpenLetterSuccess,
+    data: letterData,
+    isLoading: openLetterLoading,
+  } = useQuery(open.queryOptions({ id: params.letter, key: loaderData.key }));
 
   const form = useEditorForm();
-  const text = useWatch<EditorSchema>({ control: form.control, name: "text" });
-  const key = useWatch<EditorSchema>({ control: form.control, name: "key" });
+  const { setValue, setError, clearErrors, control } = form;
+  const text = useWatch<EditorSchema>({ control, name: "text" });
+  const key = useWatch<EditorSchema>({ control, name: "key" });
 
-  const [timer, setTimer] = useState<NodeJS.Timeout | undefined>();
-
-  useEffect(() => {
-    if (timer) clearTimeout(timer);
-    setTimer(
-      setTimeout(() => {
-        if (text)
-          saveLetter.mutateAsync({
-            id: params.letter,
-            key: key.length > 0 ? key : undefined,
-            letter: text,
-          });
-      }, 1000),
-    );
-  }, [text, key, params.letter, saveLetter.mutateAsync, timer]);
+  const { maybeExecute: saveLetter } = useAsyncDebouncer(saveLetterAsync, {
+    wait: 1000,
+  });
 
   useEffect(() => {
-    if (openLetter.isSuccess) {
-      form.setValue("text", openLetter.data);
-      form.setValue("key", loaderData.key ?? "");
+    saveLetter({
+      id: params.letter,
+      key: key.length > 0 ? key : undefined,
+      letter: text,
+    });
+  }, [text, key, params.letter, saveLetter]);
+
+  useEffect(() => {
+    if (isOpenLetterSuccess) {
+      setValue("text", letterData);
+      setValue("key", loaderData.key ?? "");
     }
-  }, [openLetter.data, openLetter.isSuccess, form, loaderData.key]);
+  }, [setValue, loaderData.key, isOpenLetterSuccess, letterData]);
 
   useEffect(() => {
-    if (saveLetter.isError) {
-      form.setError("root", {
-        message: `Failed to save letter: ${saveLetter.error}`,
+    if (saveLetterErrored) {
+      setError("root", {
+        message: `Failed to save letter: ${saveLetterError}`,
       });
-      form.setValue("save", "❌");
+      setValue("save", "❌");
     }
-  }, [saveLetter.error, saveLetter.isError, form]);
-
-  useEffect(() => {
-    if (saveLetter.isPending) form.setValue("save", "⏳");
-    if (saveLetter.isSuccess) {
-      form.clearErrors();
-      form.setValue("save", "✅");
+    if (saveLetterPending) setValue("save", "⏳");
+    if (saveLetterSuccess) {
+      clearErrors();
+      setValue("save", "✅");
     }
-  }, [saveLetter.isPending, saveLetter.isSuccess]);
+  }, [
+    setValue,
+    setError,
+    clearErrors,
+    saveLetterErrored,
+    saveLetterPending,
+    saveLetterSuccess,
+    saveLetterError,
+  ]);
 
-  if (!params.letter.match(/[a-z0-9]{10}/)) {
-    return error("Invalid Letter ID");
-  } else if (letterExists.isSuccess && !letterExists.data) {
-    return error("No such Letter");
-  }
-
-  if (openLetter.isLoading) {
+  if (openLetterLoading) {
     return (
       <main className="mx-auto flex flex-col items-center p-4 pt-8 lg:mx-16">
         <p>Loading...</p>
