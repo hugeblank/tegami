@@ -10,11 +10,19 @@ import { checkKey } from "../util/misc";
 import { findPath } from "~/util/naming";
 import { fileTypeFromBuffer } from "file-type";
 
+function identifier() {
+  return z.string().regex(/[0-9a-f]{10}/);
+}
+
+function fileName() {
+  return z.string().regex(/[0-9a-f]{10}\.[0-9a-z]{2,4}/);
+}
+
 export const tegami = router({
   unlock: publicProcedure
     .input(
       z.object({
-        id: z.string(),
+        id: identifier(),
         key: z.optional(z.string()).nullable(),
       }),
     )
@@ -46,7 +54,7 @@ export const tegami = router({
   open: publicProcedure
     .input(
       z.object({
-        id: z.string(),
+        id: identifier(),
         key: z.optional(z.string()).nullable(),
       }),
     )
@@ -90,7 +98,7 @@ export const tegami = router({
       }
     }),
   checkKey: publicProcedure
-    .input(z.string())
+    .input(identifier())
     .output(z.object({ has: z.boolean(), key: z.optional(z.string()) }))
     .query(async ({ input, ctx }) => {
       try {
@@ -109,7 +117,7 @@ export const tegami = router({
         message: `No such letter with id ${input}`,
       });
     }),
-  create: publicProcedure.output(z.string()).mutation(async ({ ctx }) => {
+  create: publicProcedure.output(identifier()).mutation(async ({ ctx }) => {
     if (!isAuthed(ctx.req)) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
@@ -128,7 +136,7 @@ export const tegami = router({
   save: publicProcedure
     .input(
       z.object({
-        id: z.string(),
+        id: identifier(),
         letter: z.string(),
         key: z.string().optional(),
       }),
@@ -162,7 +170,7 @@ export const tegami = router({
       }
     }),
   listMedia: publicProcedure
-    .input(z.string())
+    .input(identifier())
     .output(z.array(z.object({ name: z.string(), type: z.string() })))
     .query(async ({ ctx, input }) => {
       if (!isAuthed(ctx.req)) {
@@ -187,25 +195,41 @@ export const tegami = router({
   delete: publicProcedure
     .input(
       z.object({
-        id: z.string(),
-        name: z.string(),
+        id: identifier(),
+        name: fileName(),
       }),
     )
     .output(z.boolean())
     .mutation(async ({ input, ctx }) => {
       if (!isAuthed(ctx.req)) throw new TRPCError({ code: "UNAUTHORIZED" });
-      if (
-        !(
-          input.id.match(/[0-9a-f]{10}/) ||
-          input.name.match(/[0-9a-f]{10}\.[0-9a-z]{2:4}/)
-        )
-      ) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Malformed letter ID or media file name",
-        });
-      }
       await rm(path.join(env.TEGAMI, input.id, input.name));
       return true;
+    }),
+  mime: publicProcedure
+    .input(
+      z.object({
+        id: identifier(),
+        key: z.string().optional(),
+        name: fileName(),
+      }),
+    )
+    .output(z.string())
+    .query(async ({ input, ctx }) => {
+      try {
+        const check = await checkKey(input.id, ctx.req);
+        if (check && input.key === check.key) {
+          const res = await fileTypeFromBuffer(
+            await readFile(path.join(env.TEGAMI, input.id, input.name)),
+          );
+          return res ? res.mime : "text/plain";
+        } else {
+          throw new TRPCError({ code: "UNAUTHORIZED" });
+        }
+      } catch {
+        throw new TRPCError({
+          code: "UNPROCESSABLE_CONTENT",
+          message: `Error parsing key for letter ${input}`,
+        });
+      }
     }),
 });

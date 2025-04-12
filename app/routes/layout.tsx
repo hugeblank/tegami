@@ -1,7 +1,7 @@
 import { Link, Outlet } from "react-router";
 import type { Route } from "./+types/layout";
 import { isAuthed } from "~/api/login";
-import { headerHeight } from "~/util/misc";
+import { headerHeight } from "~/util/clientonly";
 
 export function loader({ request }: Route.LoaderArgs) {
   return isAuthed(request);

@@ -8,7 +8,7 @@ import { useTRPC } from "~/lib/trpc";
 import { redirect, type ActionFunctionArgs } from "react-router";
 import Prose from "~/components/Prose";
 import { useEffect } from "react";
-import { headerHeight } from "~/util/misc";
+import { headerHeight } from "~/util/clientonly";
 import Editor, { useEditorForm, type EditorSchema } from "~/components/Editor";
 import { useWatch } from "react-hook-form";
 import { writeFile } from "fs/promises";
