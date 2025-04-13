@@ -22,7 +22,7 @@ export default function About({}: Route.LoaderArgs) {
       </p>
       <Media
         className="rounded-xl border"
-        src="/public/home.png"
+        src="/static/home.png"
         alt="Home page letter selection menu"
         dialog
       />
@@ -39,7 +39,7 @@ export default function About({}: Route.LoaderArgs) {
       </p>
       <Media
         className="rounded-xl border"
-        src="/public/editor.png"
+        src="/static/editor.png"
         alt="Editor preview"
         dialog
       />
@@ -49,7 +49,7 @@ export default function About({}: Route.LoaderArgs) {
       </p>
       <Media
         className="rounded-xl border"
-        src="/public/media.png"
+        src="/static/media.png"
         alt="Media viewer with upload button, and insert and delete buttons on each piece of media"
         dialog
       />

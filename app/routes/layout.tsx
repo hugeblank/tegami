@@ -12,7 +12,7 @@ export default function Layout({ loaderData }: Route.ComponentProps) {
       <header className="container mx-auto h-[calc(var(--header-height)/4)] pt-2">
         <div className="flex w-full flex-row justify-between">
           <Link className="align-center inline-flex" to="/">
-            <img className="w-16" src="/icon.png" alt="icon"></img>
+            <img className="w-16" src="/static/icon.png" alt="icon"></img>
             <h1 className="block text-3xl font-semibold [writing-mode:vertical-lr]">
               手紙
             </h1>
