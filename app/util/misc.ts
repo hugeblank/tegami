@@ -4,7 +4,7 @@ import path from "path";
 import { isAuthed } from "../api/login";
 import { env } from "~/util/env";
 
-type KeyCheck = { has: boolean; key?: string };
+export type KeyCheck = { has: boolean; key?: string };
 
 export async function checkKey(
   id: string,

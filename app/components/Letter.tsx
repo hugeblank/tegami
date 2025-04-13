@@ -17,22 +17,20 @@ export const components = {
 
 export default function Letter({
   id,
-  access,
+  access: key,
 }: {
   id: string;
   access?: string;
 }) {
   const trpc = useTRPC();
 
-  const openLetter = useQuery(
-    trpc.tegami.open.queryOptions({ id, key: access }),
-  );
+  const openLetter = useQuery(trpc.tegami.open.queryOptions({ id, key }));
 
   if (openLetter.isLoading) {
     return <p>Loading...</p>;
   } else {
     return (
-      <Prose urlTransform={transform(id, access)} components={components}>
+      <Prose urlTransform={transform(id, key)} components={components}>
         {openLetter.data}
       </Prose>
     );

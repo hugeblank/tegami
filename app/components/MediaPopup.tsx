@@ -11,6 +11,7 @@ import { useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "~/lib/trpc";
 import { useSubmit } from "react-router";
+import { Image, ImageUp } from "lucide-react";
 
 export type UploadSchema = {
   media: number | string | readonly string[] | undefined;
@@ -57,7 +58,9 @@ export default function MediaPopup({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button type="button">Media</Button>
+        <Button type="button">
+          Media <Image />
+        </Button>
       </DialogTrigger>
       <DialogContent className="h-11/12 w-11/12 content-start sm:max-w-[unset]">
         <DialogHeader className="h-10 flex-row place-items-center gap-4">
@@ -77,7 +80,7 @@ export default function MediaPopup({
               onChange={onInput}
             />
             <Button type="button" onClick={() => inputRef.current?.click()}>
-              Upload
+              Upload <ImageUp />
             </Button>
           </form>
         </DialogHeader>

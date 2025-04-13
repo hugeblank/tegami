@@ -16,6 +16,7 @@ import { skipToken, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "~/lib/trpc";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { MailOpen } from "lucide-react";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.png" },
@@ -153,7 +154,7 @@ export default function Home() {
             }}
           />
           <Button className="mt-2" type="submit">
-            Submit
+            Open Letter <MailOpen />
           </Button>
         </form>
       </Form>

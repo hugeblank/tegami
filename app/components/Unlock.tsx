@@ -1,5 +1,5 @@
 import { useTRPC } from "~/lib/trpc";
-import { useQuery } from "@tanstack/react-query";
+import { skipToken, useQuery } from "@tanstack/react-query";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useForm } from "react-hook-form";
@@ -13,7 +13,9 @@ import {
   FormLabel,
   FormMessage,
 } from "./ui/form";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import type { KeyCheck } from "~/util/misc";
+import { MailOpen } from "lucide-react";
 
 const FormSchema = z.object({
   accessKey: z.string(),
@@ -25,32 +27,15 @@ export default function Unlock({
 }: {
   id: string;
   accessState: [
-    string | undefined,
-    React.Dispatch<React.SetStateAction<string | undefined>>,
+    KeyCheck | undefined,
+    React.Dispatch<React.SetStateAction<KeyCheck | undefined>>,
   ];
 }) {
   const { checkKey, unlock } = useTRPC().tegami;
   const lsid = `letter-${id}`;
   const [access, setAccess] = accessState;
-
-  const {
-    isSuccess: checkKeySuccess,
-    data: keyResult,
-    isLoading: checkKeyLoading,
-  } = useQuery(checkKey.queryOptions(id));
-
-  // Attempt to load key from localStorage
-  useEffect(() => {
-    if (checkKeySuccess) setAccess(keyResult.key);
-    const item = localStorage.getItem(lsid);
-    if (item) setAccess(item);
-  }, [checkKeySuccess, keyResult, lsid, setAccess]);
-
-  const {
-    data: unlockedLetter,
-    isLoading: letterLoading,
-    isSuccess: unlockSuccess,
-  } = useQuery(unlock.queryOptions({ id, key: access }));
+  const [attemptUnlock, setAttempt] = useState<KeyCheck>();
+  const [localAttempt, setLocalAttempt] = useState(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -59,39 +44,90 @@ export default function Unlock({
     },
   });
 
-  // If the key from localStorage fails, handle form
+  const {
+    // Check if there's a key at all. If authed, key is provided.
+    isSuccess: checkKeySuccess,
+    data: keyResult,
+    isLoading: checkKeyLoading,
+  } = useQuery(checkKey.queryOptions(id));
+
+  const {
+    // Attempt to unlock the letter with the given key
+    data: unlocked,
+    isLoading: unlockLoading,
+    isSuccess: unlockQuerySuccess,
+  } = useQuery(
+    unlock.queryOptions(
+      attemptUnlock ? { id, key: attemptUnlock.key } : skipToken,
+    ),
+  );
+
+  // Attempt to load key from localStorage
   useEffect(() => {
-    if (
-      !letterLoading &&
-      !unlockSuccess &&
-      localStorage.getItem(lsid) !== null
-    ) {
-      localStorage.removeItem(lsid);
-      setAccess(undefined);
+    if (!attemptUnlock && !localAttempt) {
+      // If no attempt at a local unlock has been attempted
+      if (checkKeySuccess && keyResult.has) {
+        // And the server says there is a key
+        if (keyResult.key) {
+          // And it's being provided, just set it.
+          setAccess(keyResult);
+        } else {
+          // Otherwise we have to guess, starting from localStorage
+          const item = localStorage.getItem(lsid);
+          if (item) setAttempt({ has: true, key: item });
+        }
+      } else if (checkKeySuccess) {
+        // Otherwise if there is not a key
+        setAccess(keyResult);
+      }
+      // Flag that we've tried unlocking locally so we don't try this branch again
+      setLocalAttempt(true);
     }
 
-    if (!access || access.length === 0) {
-      form.clearErrors("accessKey");
-    } else if (!(unlockedLetter || letterLoading)) {
-      form.setError("accessKey", { message: "Incorrect access key" });
+    // If a local unlock has been attempted, and didn't unlock the letter
+    if (attemptUnlock && localAttempt && unlockQuerySuccess && !unlocked) {
+      // clear localStorage & reset attempt
+      localStorage.removeItem(lsid);
+      setAttempt(undefined);
+    }
+
+    // If the given attempt successfully unlocked the letter
+    if (attemptUnlock && unlockQuerySuccess && unlocked) {
+      // Pass it along to access & set it in localStorage
+      setAccess(attemptUnlock);
+      if (attemptUnlock.key) localStorage.setItem(lsid, attemptUnlock.key);
     }
   }, [
-    access,
-    setAccess,
-    form,
+    checkKeySuccess,
+    keyResult,
     lsid,
-    unlockedLetter,
-    letterLoading,
-    unlockSuccess,
+    attemptUnlock,
+    setAccess,
+    setLocalAttempt,
+    unlockQuerySuccess,
+    unlocked,
+    localAttempt,
   ]);
 
-  if (!access && (checkKeyLoading || letterLoading)) {
+  // Handle form
+  useEffect(() => {
+    if (
+      !attemptUnlock ||
+      !attemptUnlock.key ||
+      attemptUnlock.key.length === 0
+    ) {
+      form.clearErrors("accessKey");
+    } else if (!unlocked && unlockQuerySuccess) {
+      form.setError("accessKey", { message: "Incorrect access key" });
+    }
+  }, [attemptUnlock, form, unlockQuerySuccess, unlocked]);
+
+  if (checkKeyLoading && unlockLoading) {
     return <p>Loading...</p>;
   }
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    setAccess(data.accessKey);
-    localStorage.setItem(lsid, data.accessKey);
+    setAttempt({ has: true, key: data.accessKey });
   }
 
   if (!access && keyResult?.has) {
@@ -114,7 +150,7 @@ export default function Unlock({
                       />
                     </FormControl>
                     <Button className="sm:mt-2 md:mt-0 md:ml-2" type="submit">
-                      Submit
+                      Open Letter <MailOpen />
                     </Button>
                   </div>
                   <FormMessage />

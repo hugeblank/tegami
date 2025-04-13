@@ -13,6 +13,8 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { useState } from "react";
 import MediaPopup from "./MediaPopup";
+import { Button } from "./ui/button";
+import { Share } from "lucide-react";
 
 const FormSchema = z.object({
   text: z.string(),
@@ -48,6 +50,12 @@ export default function Editor({
 
   function onUpdate() {
     if (save !== "✏️") form.setValue("save", "✏️");
+  }
+
+  function onShare() {
+    navigator.clipboard.writeText(
+      document.location.href.replace("admin", "open"),
+    );
   }
 
   return (
@@ -87,6 +95,9 @@ export default function Editor({
               accessKey={accessKey}
               setText={(tag: string) => form.setValue("text", text + tag)}
             ></MediaPopup>
+            <Button type="button" onClick={onShare}>
+              Share <Share />
+            </Button>
           </div>
           <FormField
             control={form.control}
