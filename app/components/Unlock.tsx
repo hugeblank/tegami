@@ -46,9 +46,11 @@ export default function Unlock({
     if (item) setAccess(item);
   }, [checkKeySuccess, keyResult, lsid, setAccess]);
 
-  const { data: unlockedLetter, isLoading: letterLoading } = useQuery(
-    unlock.queryOptions({ id, key: access }),
-  );
+  const {
+    data: unlockedLetter,
+    isLoading: letterLoading,
+    isSuccess: unlockSuccess,
+  } = useQuery(unlock.queryOptions({ id, key: access }));
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -59,7 +61,11 @@ export default function Unlock({
 
   // If the key from localStorage fails, handle form
   useEffect(() => {
-    if (unlockedLetter === false && localStorage.getItem(lsid) !== null) {
+    if (
+      !letterLoading &&
+      !unlockSuccess &&
+      localStorage.getItem(lsid) !== null
+    ) {
       localStorage.removeItem(lsid);
       setAccess(undefined);
     }
@@ -69,7 +75,15 @@ export default function Unlock({
     } else if (!(unlockedLetter || letterLoading)) {
       form.setError("accessKey", { message: "Incorrect access key" });
     }
-  }, [access, setAccess, form, lsid, unlockedLetter, letterLoading]);
+  }, [
+    access,
+    setAccess,
+    form,
+    lsid,
+    unlockedLetter,
+    letterLoading,
+    unlockSuccess,
+  ]);
 
   if (!access && (checkKeyLoading || letterLoading)) {
     return <p>Loading...</p>;

@@ -6,7 +6,7 @@ import { env } from "~/util/env";
 import { existsSync } from "node:fs";
 import { TRPCError } from "@trpc/server";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
-import { checkKey } from "../util/misc";
+import { checkKey, letterExists } from "../util/misc";
 import { findPath } from "~/util/naming";
 import { fileTypeFromBuffer } from "file-type";
 
@@ -19,6 +19,10 @@ function fileName() {
 }
 
 export const tegami = router({
+  exists: publicProcedure
+    .input(identifier())
+    .output(z.boolean())
+    .query(({ input }) => letterExists(input)),
   unlock: publicProcedure
     .input(
       z.object({

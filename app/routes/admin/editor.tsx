@@ -8,7 +8,6 @@ import { useTRPC } from "~/lib/trpc";
 import { redirect, type ActionFunctionArgs } from "react-router";
 import Prose from "~/components/Prose";
 import { useEffect } from "react";
-import { headerHeight } from "~/util/clientonly";
 import Editor, { useEditorForm, type EditorSchema } from "~/components/Editor";
 import { useWatch } from "react-hook-form";
 import { writeFile } from "fs/promises";
@@ -115,12 +114,10 @@ export default function EditorRoute({
     );
   } else {
     return (
-      <main
-        className={`xl:mx-16 h-[calc(100vh_-_(${headerHeight}rem_/_4))] flex flex-col items-center p-4 pt-8`}
-      >
+      <main className="flex h-[calc(100vh_-_calc(var(--header-height)_/_4))] flex-col items-center p-4 pt-8 xl:mx-16">
         <div className="flex h-full w-full gap-4">
           <Prose
-            articleClass="mx-20 w-1/2 h-full overflow-y-auto"
+            articleClass="mx-auto w-1/2 p-2 h-full overflow-y-auto"
             urlTransform={transform(params.letter, loaderData.key)}
             components={components}
           >

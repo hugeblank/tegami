@@ -31,7 +31,7 @@ export default function Root({ loaderData }: Route.ComponentProps) {
   const links = loaderData.map((name, i) => {
     return (
       <Link
-        className="text-xl text-blue-500 underline"
+        className="text-xl text-blue-500 hover:underline"
         to={name}
         key={name + i}
       >

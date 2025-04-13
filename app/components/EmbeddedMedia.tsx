@@ -1,6 +1,4 @@
 import { type HTMLProps } from "react";
-import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
-import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
 import { useTRPC } from "~/lib/trpc";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import Media from "./Media";
@@ -23,20 +21,12 @@ export default function EmbeddedMedia(props: HTMLProps<HTMLImageElement>) {
   }
 
   const type = query.data!.split("/")[0];
-  if (type === "image") {
-    return (
-      <Dialog>
-        <DialogTrigger asChild>
-          <img {...props} />
-        </DialogTrigger>
-        <DialogContent className="flex h-11/12 w-11/12 flex-col sm:max-w-[unset]">
-          <DialogTitle hidden>{props.src}</DialogTitle>
-          <DialogDescription>{props.alt}</DialogDescription>
-          <img {...props} className="h-full w-full object-scale-down" />
-        </DialogContent>
-      </Dialog>
-    );
-  } else {
-    return <Media src={props.src!} mime={query.data} alt={props.alt} />;
-  }
+  return (
+    <Media
+      src={props.src!}
+      mime={query.data}
+      alt={props.alt}
+      dialog={type === "image"}
+    />
+  );
 }
