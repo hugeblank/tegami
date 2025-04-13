@@ -136,6 +136,26 @@ export const tegami = router({
         });
       }
     }),
+  deleteMedia: publicProcedure
+    .input(
+      z.object({
+        id: identifier(),
+        name: fileName(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!isAuthed(ctx.req)) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+      try {
+        await rm(path.join(env.TEGAMI, input.id, input.name));
+      } catch (e) {
+        throw new TRPCError({
+          code: "UNPROCESSABLE_CONTENT",
+          message: `Error creating letter: ${e}`,
+        });
+      }
+    }),
   create: publicProcedure.output(identifier()).mutation(async ({ ctx }) => {
     if (!isAuthed(ctx.req)) {
       throw new TRPCError({ code: "UNAUTHORIZED" });

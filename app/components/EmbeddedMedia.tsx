@@ -2,6 +2,7 @@ import { type HTMLProps } from "react";
 import { useTRPC } from "~/lib/trpc";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import Media from "./Media";
+import Throbber from "./Throbber";
 
 export default function EmbeddedMedia(props: HTMLProps<HTMLImageElement>) {
   const { mime } = useTRPC().tegami;
@@ -15,7 +16,7 @@ export default function EmbeddedMedia(props: HTMLProps<HTMLImageElement>) {
   );
 
   if (query.isLoading) {
-    return "Loading...";
+    return <Throbber />;
   } else if (!query.isSuccess) {
     return `Failed to load media\n${name} ${props.alt ? "(" + props.alt + ")" : ""}`;
   }

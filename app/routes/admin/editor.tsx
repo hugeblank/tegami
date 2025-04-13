@@ -15,6 +15,7 @@ import path from "path";
 import { fileTypeFromBuffer } from "file-type";
 import { env } from "~/util/env";
 import { findPath } from "~/util/naming";
+import Throbber from "~/components/Throbber";
 
 export async function action({ request, params }: ActionFunctionArgs) {
   if (!isAuthed(request)) throw new Response("Unauthorized", { status: 400 });
@@ -109,7 +110,7 @@ export default function EditorRoute({
   if (openLetterLoading) {
     return (
       <main className="mx-auto flex flex-col items-center p-4 pt-8 lg:mx-16">
-        <p>Loading...</p>
+        <Throbber large />
       </main>
     );
   } else {

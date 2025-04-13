@@ -12,7 +12,7 @@ import Media from "./Media";
 import { SquareCheck } from "lucide-react";
 import { useState } from "react";
 
-export default function ImageCard({
+export default function MediaCard({
   id,
   accessKey,
   info,
@@ -25,11 +25,13 @@ export default function ImageCard({
   info: { name: string; type: string };
   refresh: () => unknown;
 }) {
-  const removeImage = useMutation(useTRPC().tegami.delete.mutationOptions());
+  const removeMedia = useMutation(
+    useTRPC().tegami.deleteMedia.mutationOptions(),
+  );
   const [inserted, setInsert] = useState(false);
 
   async function onDelete() {
-    await removeImage.mutateAsync({ id, name: info.name });
+    await removeMedia.mutateAsync({ id, name: info.name });
     refresh();
   }
 

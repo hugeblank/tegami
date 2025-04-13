@@ -74,49 +74,47 @@ export default function Root({ loaderData }: Route.ComponentProps) {
       <div className="grid w-full grid-cols-[repeat(auto-fill,minmax(19rem,1fr)_)] gap-4">
         {letters.map((letter, i) => {
           return (
-            <>
-              <Card key={letter.name + i}>
-                <div className="flex flex-col gap-1 px-6">
-                  <div className="flex justify-between">
-                    <Link
-                      className="text-xl text-blue-500 hover:underline"
-                      to={letter.name}
-                    >
-                      {letter.name}
-                    </Link>
-                    <Dialog>
-                      <DialogTrigger>
-                        <Trash className="cursor-pointer" color="#f55" />
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>Are you sure?</DialogHeader>
-                        <DialogDescription>
-                          Deleting a Tegami is a permanent action!
-                        </DialogDescription>
-                        <div className="flex gap-4">
-                          <DialogClose>
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              onClick={() => onTrash(letter)}
-                            >
-                              Delete
-                            </Button>
-                          </DialogClose>
-                          <DialogClose>
-                            <Button type="button" variant="secondary">
-                              Cancel
-                            </Button>
-                          </DialogClose>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                  <p>Created: {letter.created.toLocaleString()}</p>
-                  <p>Modified: {letter.modified.toLocaleString()}</p>
+            <Card key={letter.name + i}>
+              <div className="flex flex-col gap-1 px-6">
+                <div className="flex justify-between">
+                  <Link
+                    className="text-xl text-blue-500 hover:underline"
+                    to={letter.name}
+                  >
+                    {letter.name}
+                  </Link>
+                  <Dialog>
+                    <DialogTrigger>
+                      <Trash className="cursor-pointer" color="#f55" />
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>Are you sure?</DialogHeader>
+                      <DialogDescription>
+                        Deleting a Tegami is a permanent action!
+                      </DialogDescription>
+                      <div className="flex gap-4">
+                        <DialogClose>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={() => onTrash(letter)}
+                          >
+                            Delete
+                          </Button>
+                        </DialogClose>
+                        <DialogClose>
+                          <Button type="button" variant="secondary">
+                            Cancel
+                          </Button>
+                        </DialogClose>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
-              </Card>
-            </>
+                <p>Created: {letter.created.toLocaleString()}</p>
+                <p>Modified: {letter.modified.toLocaleString()}</p>
+              </div>
+            </Card>
           );
         })}
       </div>

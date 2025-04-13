@@ -3,6 +3,7 @@ import EmbeddedMedia from "./EmbeddedMedia";
 import { useTRPC } from "~/lib/trpc";
 import { useQuery } from "@tanstack/react-query";
 import Prose from "./Prose";
+import Throbber from "./Throbber";
 
 export function transform(id: string, key?: string): (url: string) => string {
   return (url: string) =>
@@ -27,7 +28,7 @@ export default function Letter({
   const openLetter = useQuery(trpc.tegami.open.queryOptions({ id, key }));
 
   if (openLetter.isLoading) {
-    return <p>Loading...</p>;
+    return <Throbber />;
   } else {
     return (
       <Prose urlTransform={transform(id, key)} components={components}>

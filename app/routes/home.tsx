@@ -97,7 +97,7 @@ export default function Home() {
     const localletters = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith("letter-")) {
+      if ((key && key.startsWith("letter-")) || key?.startsWith("cache-")) {
         localletters.push(key.split("-")[1]);
       }
     }

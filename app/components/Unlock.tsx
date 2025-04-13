@@ -16,6 +16,7 @@ import {
 import { useEffect, useState } from "react";
 import type { KeyCheck } from "~/util/misc";
 import { MailOpen } from "lucide-react";
+import Throbber from "./Throbber";
 
 const FormSchema = z.object({
   accessKey: z.string(),
@@ -82,7 +83,7 @@ export default function Unlock({
         }
       } else if (checkKeySuccess) {
         // Otherwise if there is not a key
-        console.log("ACCESS?!");
+        localStorage.setItem(`cache-${id}`, "");
         setAccess(keyResult);
         setLocalAttempt(true);
       }
@@ -111,6 +112,7 @@ export default function Unlock({
     unlockQuerySuccess,
     unlocked,
     localAttempt,
+    id,
   ]);
 
   // Handle form
@@ -127,7 +129,7 @@ export default function Unlock({
   }, [attemptUnlock, form, unlockQuerySuccess, unlocked]);
 
   if (checkKeyLoading && unlockLoading) {
-    return <p>Loading...</p>;
+    return <Throbber />;
   }
 
   function onSubmit(data: z.infer<typeof FormSchema>) {

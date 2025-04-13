@@ -1,5 +1,5 @@
 import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
-import ImageCard from "./ImageCard";
+import MediaCard from "./ImageCard";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "~/lib/trpc";
 import { useSubmit } from "react-router";
 import { Image, ImageUp } from "lucide-react";
+import Throbber from "./Throbber";
 
 export type UploadSchema = {
   media: number | string | readonly string[] | undefined;
@@ -87,19 +88,21 @@ export default function MediaPopup({
         <div className="grid grid-cols-[repeat(auto-fill,minmax(32rem,0fr)_)] place-content-start gap-4 overflow-y-scroll">
           {listMedia.isSuccess ? (
             listMedia.data.map((info, i) => (
-              <ImageCard
+              <MediaCard
                 id={id}
                 key={i}
                 accessKey={accessKey}
                 appendText={appendText}
                 info={info}
                 refresh={listMedia.refetch}
-              ></ImageCard>
+              ></MediaCard>
             ))
           ) : listMedia.isLoading ? (
-            <p>Loading...</p>
+            <Throbber />
           ) : (
-            <p>Uh oh!</p>
+            <p className="text-red-500">
+              Uh oh! Error while loading media cards. Please refresh the page.
+            </p>
           )}
         </div>
       </DialogContent>
