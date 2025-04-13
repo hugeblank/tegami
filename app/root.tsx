@@ -17,6 +17,7 @@ import {
   trpcMiddleware,
 } from "~/lib/prefetch";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { Toaster } from "./components/ui/sonner";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.png" },
@@ -33,6 +34,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <Toaster />
         <ScrollRestoration />
         <Scripts />
       </body>

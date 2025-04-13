@@ -14,7 +14,8 @@ import { Textarea } from "./ui/textarea";
 import { useState } from "react";
 import MediaPopup from "./MediaPopup";
 import { Button } from "./ui/button";
-import { Share } from "lucide-react";
+import { ClipboardCheck, Share } from "lucide-react";
+import { toast } from "sonner";
 
 const FormSchema = z.object({
   text: z.string(),
@@ -56,6 +57,9 @@ export default function Editor({
     navigator.clipboard.writeText(
       document.location.href.replace("admin", "open"),
     );
+    toast(<p>Link saved to clipboard</p>, {
+      icon: <ClipboardCheck />,
+    });
   }
 
   return (

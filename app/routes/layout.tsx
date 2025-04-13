@@ -23,7 +23,7 @@ export default function Layout({ loaderData }: Route.ComponentProps) {
             </Link>
             {loaderData && (
               <Link to="/admin" className="align-center">
-                <h1 className="block text-3xl font-semibold text-red-300">
+                <h1 className="block text-3xl font-semibold text-red-400">
                   Admin
                 </h1>
               </Link>
