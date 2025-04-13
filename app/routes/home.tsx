@@ -53,10 +53,13 @@ export default function Home() {
   );
   const unlock = useQuery(
     unlockQuery.queryOptions(
-      sema && watch.id && watch.accessKey
+      sema && watch.id
         ? {
             id: watch.id,
-            key: watch.accessKey.length === 0 ? undefined : watch.accessKey,
+            key:
+              watch.accessKey && watch.accessKey.length === 0
+                ? undefined
+                : watch.accessKey,
           }
         : skipToken,
     ),
