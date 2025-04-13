@@ -9,23 +9,37 @@ import { Button } from "./ui/button";
 import { useTRPC } from "~/lib/trpc";
 import { useMutation } from "@tanstack/react-query";
 import Media from "./Media";
+import { SquareCheck } from "lucide-react";
+import { useState } from "react";
 
 export default function ImageCard({
   id,
   accessKey,
   info,
+  appendText,
   refresh,
 }: {
   id: string;
   accessKey?: string;
+  appendText: (text: string) => void;
   info: { name: string; type: string };
   refresh: () => unknown;
 }) {
   const removeImage = useMutation(useTRPC().tegami.delete.mutationOptions());
+  const [inserted, setInsert] = useState(false);
 
   async function onDelete() {
     await removeImage.mutateAsync({ id, name: info.name });
     refresh();
+  }
+
+  function onInsert() {
+    appendText(`\n![media](./${info.name})`);
+    setInsert(true);
+  }
+
+  function onHoverExit() {
+    setInsert(false);
   }
 
   return (
@@ -41,8 +55,18 @@ export default function ImageCard({
         />
       </CardContent>
       <CardFooter className="h-fit gap-2 self-center">
-        <Button type="button" variant="secondary">
-          Insert
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onInsert}
+          onMouseLeave={onHoverExit}
+        >
+          Insert{" "}
+          {inserted ? (
+            <SquareCheck className="stroke-background fill-foreground" />
+          ) : (
+            <SquareCheck />
+          )}
         </Button>
         <Button type="button" variant="destructive" onClick={onDelete}>
           Delete

@@ -121,6 +121,21 @@ export const tegami = router({
         message: `No such letter with id ${input}`,
       });
     }),
+  delete: publicProcedure
+    .input(identifier())
+    .mutation(async ({ ctx, input }) => {
+      if (!isAuthed(ctx.req)) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+      try {
+        await rm(path.join(env.TEGAMI, input), { recursive: true });
+      } catch (e) {
+        throw new TRPCError({
+          code: "UNPROCESSABLE_CONTENT",
+          message: `Error creating letter: ${e}`,
+        });
+      }
+    }),
   create: publicProcedure.output(identifier()).mutation(async ({ ctx }) => {
     if (!isAuthed(ctx.req)) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -195,19 +210,6 @@ export const tegami = router({
             };
           }),
       );
-    }),
-  delete: publicProcedure
-    .input(
-      z.object({
-        id: identifier(),
-        name: fileName(),
-      }),
-    )
-    .output(z.boolean())
-    .mutation(async ({ input, ctx }) => {
-      if (!isAuthed(ctx.req)) throw new TRPCError({ code: "UNAUTHORIZED" });
-      await rm(path.join(env.TEGAMI, input.id, input.name));
-      return true;
     }),
   mime: publicProcedure
     .input(

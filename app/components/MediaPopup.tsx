@@ -34,9 +34,11 @@ const mimes = [
 export default function MediaPopup({
   id,
   accessKey,
+  setText: appendText,
 }: {
   id: string;
   accessKey?: string;
+  setText: (text: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -79,13 +81,14 @@ export default function MediaPopup({
             </Button>
           </form>
         </DialogHeader>
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(32rem,0fr)_)] place-content-start gap-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(32rem,0fr)_)] place-content-start gap-4 overflow-y-scroll">
           {listMedia.isSuccess ? (
             listMedia.data.map((info, i) => (
               <ImageCard
                 id={id}
                 key={i}
                 accessKey={accessKey}
+                appendText={appendText}
                 info={info}
                 refresh={listMedia.refetch}
               ></ImageCard>

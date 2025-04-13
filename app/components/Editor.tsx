@@ -44,6 +44,7 @@ export default function Editor({
 }) {
   const [inputType, setInputType] = useState<string | undefined>("password");
   const save = useWatch<EditorSchema>({ control: form.control, name: "save" });
+  const text = useWatch<EditorSchema>({ control: form.control, name: "text" });
 
   function onUpdate() {
     if (save !== "✏️") form.setValue("save", "✏️");
@@ -81,7 +82,11 @@ export default function Editor({
                 );
               }}
             />
-            <MediaPopup id={id} accessKey={accessKey}></MediaPopup>
+            <MediaPopup
+              id={id}
+              accessKey={accessKey}
+              setText={(tag: string) => form.setValue("text", text + tag)}
+            ></MediaPopup>
           </div>
           <FormField
             control={form.control}
