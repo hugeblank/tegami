@@ -123,7 +123,7 @@ export default function Home() {
                   </FormLabel>
                   <div className="flex sm:flex-col md:flex-row">
                     <FormControl>
-                      <Input placeholder="Letter ID" {...field} />
+                      <Input type="text" placeholder="Letter ID" {...field} />
                     </FormControl>
                   </div>
                   <FormMessage />
