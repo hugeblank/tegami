@@ -222,7 +222,7 @@ export const tegami = router({
     .output(z.string())
     .query(async ({ input, ctx }) => {
       try {
-        const check = await checkKey(input.id, ctx.req);
+        const check = await checkKey(input.id, ctx.req, true);
         if (check && input.key === check.key) {
           const res = await fileTypeFromBuffer(
             await readFile(path.join(env.TEGAMI, input.id, input.name)),
@@ -231,10 +231,11 @@ export const tegami = router({
         } else {
           throw new TRPCError({ code: "UNAUTHORIZED" });
         }
-      } catch {
+      } catch (e) {
+        if (e instanceof TRPCError) throw e;
         throw new TRPCError({
           code: "UNPROCESSABLE_CONTENT",
-          message: `Error parsing key for letter ${input}`,
+          message: `Error parsing key for letter ${input.id}`,
         });
       }
     }),

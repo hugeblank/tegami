@@ -67,41 +67,45 @@ export default function Editor({
       <form className="w-1/2">
         <div className="flex h-full w-full flex-col">
           <FormMessage />
-          <div className="mx-4 mb-2 flex flex-row gap-4">
-            <p className="place-self-center">{save}</p>
-            <FormField
-              control={form.control}
-              name="key"
-              render={({ field }) => {
-                return (
-                  <FormItem className="flex gap-1">
-                    <FormLabel>Key:</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="w-fit"
-                        placeholder="Access Key"
-                        type={inputType}
-                        onFocus={() => setInputType(undefined)}
-                        {...field}
-                        onBlur={() => {
-                          setInputType("password");
-                          field.onBlur();
-                        }}
-                        onInput={onUpdate}
-                      />
-                    </FormControl>
-                  </FormItem>
-                );
-              }}
-            />
-            <MediaPopup
-              id={id}
-              accessKey={accessKey}
-              setText={(tag: string) => form.setValue("text", text + tag)}
-            ></MediaPopup>
-            <Button type="button" onClick={onShare}>
-              Share <Share />
-            </Button>
+          <div className="mx-4 mb-2 flex flex-col gap-2 lg:flex-row">
+            <div className="flex gap-2">
+              <p className="place-self-center">{save}</p>
+              <FormField
+                control={form.control}
+                name="key"
+                render={({ field }) => {
+                  return (
+                    <FormItem className="flex gap-1">
+                      <FormLabel>Key:</FormLabel>
+                      <FormControl>
+                        <Input
+                          className="w-fit"
+                          placeholder="Access Key"
+                          type={inputType}
+                          onFocus={() => setInputType(undefined)}
+                          {...field}
+                          onBlur={() => {
+                            setInputType("password");
+                            field.onBlur();
+                          }}
+                          onInput={onUpdate}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  );
+                }}
+              />
+            </div>
+            <div className="flex gap-2">
+              <MediaPopup
+                id={id}
+                accessKey={accessKey}
+                setText={(tag: string) => form.setValue("text", text + tag)}
+              ></MediaPopup>
+              <Button type="button" onClick={onShare}>
+                Share <Share />
+              </Button>
+            </div>
           </div>
           <FormField
             control={form.control}

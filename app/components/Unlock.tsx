@@ -71,17 +71,21 @@ export default function Unlock({
         if (keyResult.key) {
           // And it's being provided, just set it.
           setAccess(keyResult);
+          setLocalAttempt(true);
         } else {
           // Otherwise we have to guess, starting from localStorage
           const item = localStorage.getItem(lsid);
-          if (item) setAttempt({ has: true, key: item });
+          if (item) {
+            setAttempt({ has: true, key: item });
+            setLocalAttempt(true);
+          }
         }
       } else if (checkKeySuccess) {
         // Otherwise if there is not a key
+        console.log("ACCESS?!");
         setAccess(keyResult);
+        setLocalAttempt(true);
       }
-      // Flag that we've tried unlocking locally so we don't try this branch again
-      setLocalAttempt(true);
     }
 
     // If a local unlock has been attempted, and didn't unlock the letter
@@ -141,7 +145,7 @@ export default function Unlock({
               return (
                 <FormItem>
                   <FormLabel>Key</FormLabel>
-                  <div className="flex sm:flex-col md:flex-row">
+                  <div className="flex flex-col gap-2">
                     <FormControl>
                       <Input
                         type="password"
@@ -149,7 +153,7 @@ export default function Unlock({
                         {...field}
                       />
                     </FormControl>
-                    <Button className="sm:mt-2 md:mt-0 md:ml-2" type="submit">
+                    <Button type="submit">
                       Open Letter <MailOpen />
                     </Button>
                   </div>
