@@ -1,45 +1,8 @@
-# Jebsite Template
+# Tegami
 
-A modern, production-ready template for building full-stack React applications using React Router 7 and TailwindCSS 4.
+A small web app for writing and self-hosting password protected letters and unlisted blog posts.
 
-## Features
-
-- 🚀 Server-side rendering with React Router 7
-- ⚡️ Hot Module Replacement (HMR) for fast development
-- 📦 Modern bundling with Vite
-- 🔄 Data loading and mutations with React Router
-- 🔍 tRPC + React Query with server-side prefetching support
-- 🔒 TypeScript by default
-- 🎨 TailwindCSS 4 with dark mode support
-- 🧩 Utility-first CSS with class-variance-authority and tailwind-merge
-- 🛠️ Shadcn component system for beautiful UI components
-- 🚄 React Compiler for optimized performance
-- 🌐 React Router Hono Server for performant and flexible server
-- 🔍 ESLint and Prettier for code quality
-- 🧪 Husky and lint-staged for pre-commit hooks
-- 🐳 Docker support for easy deployment
-
-## Project Structure
-
-```
-jebsite-template/
-├── app/                   # Main application code
-│   ├── lib/               # Utility functions and shared code
-│   ├── routes/            # Route components and logic
-│   ├── app.css            # Global styles with TailwindCSS
-│   ├── root.tsx           # Root component and error boundaries
-│   ├── routes.ts          # Route definitions
-│   └── server.ts          # Server-side code
-├── public/                # Static assets
-├── Dockerfile             # Docker configuration for deployment
-├── components.json        # Shadcn component configuration
-├── eslint.config.js       # ESLint configuration
-├── .prettierrc            # Prettier configuration
-├── package.json           # Dependencies and scripts
-├── react-router.config.ts # React Router configuration
-├── tsconfig.json          # TypeScript configuration
-└── vite.config.ts         # Vite bundler configuration
-```
+This project was built on [`jebsite-template`](https://github.com/Lustyn/jebsite-template), a modern, production-ready template for building full-stack React applications.
 
 ## Getting Started
 
@@ -81,10 +44,10 @@ pnpm build
 To build and run using Docker:
 
 ```bash
-docker build -t jebsite .
+docker build -t tegami .
 
 # Run the container
-docker run -p 3000:3000 jebsite
+docker run -p 3000:3000 tegami
 ```
 
 The containerized application can be deployed to any platform that supports Docker, including:
@@ -110,44 +73,14 @@ Make sure to deploy the output of `pnpm build`:
 │   └── server/    # Server-side code
 ```
 
-## Styling
+## Usage
 
-This template comes with TailwindCSS 4 already configured with a beautiful default theme that supports both light and dark modes based on system preferences. The styling system includes:
+On the home page if you're not provided a link, you can input a letter ID and key. Letters that you have previously opened will appear below the form. If you are given a link, on first open you'll be asked for a key similar to the bottom half of the home page form shown below.
+![Home page letter selection menu](/public/home.png)
 
-- Modern color system using OKLCH color space
-- Responsive design utilities
-- Animation utilities via tailwindcss-animate
-- Utility composition with tailwind-merge and class-variance-authority
-- Shadcn component system for consistent, accessible UI components
+### Editor
 
-## Technologies
-
-### React Compiler
-
-This template includes React Compiler (formerly React Forget) which automatically optimizes your React components for better performance without manual memoization.
-
-### React Router Hono Server
-
-The template uses React Router Hono Server for a flexible server runtime, providing a lightweight and performant foundation for your application.
-
-### Shadcn Component System
-
-Shadcn provides a collection of reusable, accessible UI components that are fully customizable and styled with TailwindCSS. The components are installed directly into your project, giving you full control over their implementation.
-
-### tRPC + React Query
-
-The template includes tRPC integration with React Query for type-safe API calls between your client and server. This setup supports server-side prefetching of data, ensuring optimal performance and SEO benefits while maintaining end-to-end type safety.
-
-## Scripts
-
-- `dev`: Start the development server
-- `build`: Build for production
-- `start`: Start the production server
-- `typecheck`: Generate types and check for type errors
-- `format`: Format code with Prettier
-- `lint`: Lint code with ESLint
-- `prepare`: Set up Husky hooks
-
----
-
-Built with ❤️ by justy
+As the site operator, you start by picking a username and password and putting it in the `AUTH` environment variable, separated by a colon (`<username>:<password>`). To get to the editor, navigate to `/admin` and provide the same credentials used for the `AUTH` environment variable. The admin panel provides the option to create a letter, as well as edit existing letters. This is what the editor looks like, using a document written while prototyping the media viewer:
+![Editor preview](/public/editor.png)
+The media viewer is where you can upload and delete media from the letter. This is what that media viewer looks like:
+![Media viewer with upload button, and insert and delete buttons on each piece of media](/public/media.png)

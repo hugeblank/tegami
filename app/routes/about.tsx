@@ -5,7 +5,7 @@ export default function About({}: Route.LoaderArgs) {
   return (
     <main className="container mx-auto flex flex-col items-center p-4 pt-8">
       <p className="w-full py-2 lg:w-256">
-        Tegami (手紙) is a small self-contained web app for writing password
+        Tegami (手紙) is a small web app for writing and self-hosting password
         protected letters and unlisted blog posts. Writing long well thought out
         messages in the DM feature of most social media apps is usually
         cumbersome and awkward, Tegami provides the feature richness of a
