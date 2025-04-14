@@ -16,7 +16,7 @@ import {
 import { useEffect, useState } from "react";
 import type { KeyCheck } from "~/util/misc";
 import { MailOpen } from "lucide-react";
-import Throbber from "./Throbber";
+import Throbber from "./throbber";
 
 const FormSchema = z.object({
   accessKey: z.string(),

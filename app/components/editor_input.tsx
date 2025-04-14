@@ -12,7 +12,7 @@ import {
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { useState } from "react";
-import MediaPopup from "./MediaPopup";
+import { MediaBrowser } from "./media_browser";
 import { Button } from "./ui/button";
 import { ClipboardCheck, Share } from "lucide-react";
 import { toast } from "sonner";
@@ -97,11 +97,11 @@ export default function Editor({
               />
             </div>
             <div className="flex gap-2">
-              <MediaPopup
+              <MediaBrowser
                 id={id}
                 accessKey={accessKey}
                 setText={(tag: string) => form.setValue("text", text + tag)}
-              ></MediaPopup>
+              ></MediaBrowser>
               <Button type="button" onClick={onShare}>
                 Share <Share />
               </Button>

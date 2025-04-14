@@ -1,4 +1,4 @@
-import { components, transform } from "~/components/Letter";
+import { components, transform } from "~/components/letter";
 import type { Route } from "./+types/editor";
 import { isAuthed } from "~/api/login";
 import { checkKey } from "~/util/misc";
@@ -6,16 +6,19 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAsyncDebouncer } from "@tanstack/react-pacer";
 import { useTRPC } from "~/lib/trpc";
 import { redirect, type ActionFunctionArgs } from "react-router";
-import Prose from "~/components/Prose";
+import { Prose } from "~/components/letter";
 import { useEffect } from "react";
-import Editor, { useEditorForm, type EditorSchema } from "~/components/Editor";
+import Editor, {
+  useEditorForm,
+  type EditorSchema,
+} from "~/components/editor_input";
 import { useWatch } from "react-hook-form";
 import { writeFile } from "fs/promises";
 import path from "path";
 import { fileTypeFromBuffer } from "file-type";
 import { env } from "~/util/env";
 import { findPath } from "~/util/naming";
-import Throbber from "~/components/Throbber";
+import Throbber from "~/components/throbber";
 
 export async function action({ request, params }: ActionFunctionArgs) {
   if (!isAuthed(request)) throw new Response("Unauthorized", { status: 400 });

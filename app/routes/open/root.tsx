@@ -1,7 +1,7 @@
 import type { Route } from "./+types/root";
-import Letter from "~/components/Letter";
+import { Letter } from "~/components/letter";
 import { useState } from "react";
-import Unlock from "~/components/Unlock";
+import Unlock from "~/components/unlock";
 import { letterExists, type KeyCheck } from "~/util/misc";
 
 export function meta({}: Route.MetaArgs) {

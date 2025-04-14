@@ -1,4 +1,4 @@
-import Media from "~/components/Media";
+import Media from "~/components/media";
 import type { Route } from "./+types/about";
 
 export default function About({}: Route.LoaderArgs) {
