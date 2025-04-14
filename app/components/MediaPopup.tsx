@@ -87,10 +87,10 @@ export default function MediaPopup({
         </DialogHeader>
         <div className="grid grid-cols-[repeat(auto-fill,minmax(32rem,0fr)_)] place-content-start gap-4 overflow-y-scroll">
           {listMedia.isSuccess ? (
-            listMedia.data.map((info, i) => (
+            listMedia.data.map((info) => (
               <MediaCard
                 id={id}
-                key={i}
+                key={info.name}
                 accessKey={accessKey}
                 appendText={appendText}
                 info={info}
