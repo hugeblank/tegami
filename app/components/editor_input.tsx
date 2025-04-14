@@ -11,17 +11,33 @@ import {
 } from "./ui/form";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
-import { useState } from "react";
+import { useState, type JSX } from "react";
 import { MediaBrowser } from "./media_browser";
 import { Button } from "./ui/button";
-import { ClipboardCheck, Share } from "lucide-react";
+import {
+  ClipboardCheck,
+  Hourglass,
+  OctagonMinus,
+  Pencil,
+  Share,
+  SquareCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 
 const FormSchema = z.object({
   text: z.string(),
   key: z.string(),
-  save: z.string(),
+  state: z.enum(["saved", "saving", "modified", "errored"]),
 });
+
+const stateElements = new Map<string, JSX.Element>(
+  [
+    <SquareCheck key="saved" className="text-green-500" />,
+    <Pencil key="modified" className="text-yellow-500" />,
+    <Hourglass key="saving" className="text-yellow-500" />,
+    <OctagonMinus key="errored" className="text-red-500" />,
+  ].map((element) => [element.key!, element]),
+);
 
 export type EditorSchema = z.infer<typeof FormSchema>;
 
@@ -31,7 +47,7 @@ export function useEditorForm() {
     defaultValues: {
       key: "",
       text: "",
-      save: "✅",
+      state: "saved",
     },
   });
 }
@@ -46,11 +62,14 @@ export default function Editor({
   accessKey?: string;
 }) {
   const [inputType, setInputType] = useState<string | undefined>("password");
-  const save = useWatch<EditorSchema>({ control: form.control, name: "save" });
+  const state = useWatch<EditorSchema>({
+    control: form.control,
+    name: "state",
+  });
   const text = useWatch<EditorSchema>({ control: form.control, name: "text" });
 
   function onUpdate() {
-    if (save !== "✏️") form.setValue("save", "✏️");
+    if (state !== "modified") form.setValue("state", "modified");
   }
 
   function onShare() {
@@ -69,7 +88,7 @@ export default function Editor({
           <FormMessage />
           <div className="mx-4 mb-2 flex flex-col gap-2 lg:flex-row">
             <div className="flex gap-2">
-              <p className="place-self-center">{save}</p>
+              <p className="place-self-center">{stateElements.get(state)}</p>
               <FormField
                 control={form.control}
                 name="key"

@@ -1,4 +1,3 @@
-import { components, transform } from "~/components/letter";
 import type { Route } from "./+types/editor";
 import { isAuthed } from "~/api/login";
 import { checkKey } from "~/util/misc";
@@ -62,7 +61,9 @@ export default function EditorRoute({
     isSuccess: isOpenLetterSuccess,
     data: letterData,
     isLoading: openLetterLoading,
-  } = useQuery(open.queryOptions({ id: params.letter, key: loaderData.key }));
+  } = useQuery(
+    open.queryOptions({ id: params.letter, access: loaderData.key }),
+  );
 
   const form = useEditorForm();
   const { setValue, setError, clearErrors, control } = form;
@@ -93,12 +94,12 @@ export default function EditorRoute({
       setError("root", {
         message: `Failed to save letter: ${saveLetterError}`,
       });
-      setValue("save", "❌");
+      setValue("state", "errored");
     }
-    if (saveLetterPending) setValue("save", "⏳");
+    if (saveLetterPending) setValue("state", "saving");
     if (saveLetterSuccess) {
       clearErrors();
-      setValue("save", "✅");
+      setValue("state", "saved");
     }
   }, [
     setValue,
@@ -120,13 +121,15 @@ export default function EditorRoute({
     return (
       <main className="flex h-[calc(100vh_-_calc(var(--header-height)_/_4))] flex-col items-center p-4 pt-8 xl:mx-16">
         <div className="flex h-full w-full gap-4">
-          <Prose
-            articleClass="mx-auto w-1/2 p-2 h-full overflow-y-auto"
-            urlTransform={transform(params.letter, loaderData.key)}
-            components={components}
-          >
-            {text}
-          </Prose>
+          <div className="w-1/2 overflow-y-auto rounded-xl border-2 px-4">
+            <Prose
+              articleClass="mx-auto w-full py-2 h-full"
+              id={params.letter}
+              access={loaderData.key}
+            >
+              {text}
+            </Prose>
+          </div>
           <Editor
             id={params.letter}
             accessKey={key.length > 0 ? key : undefined}

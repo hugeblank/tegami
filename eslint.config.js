@@ -26,6 +26,7 @@ export default [
   {
     rules: {
       "no-empty-pattern": "off",
+      "@typescript-eslint/no-explicit-any": "off",
     },
   },
 ];

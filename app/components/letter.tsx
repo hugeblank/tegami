@@ -1,41 +1,39 @@
-import Markdown, { defaultUrlTransform, type Options } from "react-markdown";
+import Markdown, { defaultUrlTransform, type Components } from "react-markdown";
 import { EmbeddedMedia } from "./media";
 import { useTRPC } from "~/lib/trpc";
 import { useQuery } from "@tanstack/react-query";
 import Throbber from "./throbber";
 
-export function transform(id: string, key?: string): (url: string) => string {
+function transform(id: string, key?: string): (url: string) => string {
   return (url: string) =>
     defaultUrlTransform(
       `/media/${id}/${url.replace(/^\.\//, "")}${key ? `?key=${key}` : ""}`,
     );
 }
 
-export const components = {
+const components: Components = {
   img: EmbeddedMedia,
+  p: ({ children }) => <>{children}</>,
 };
 
-export function Letter({ id, access: key }: { id: string; access?: string }) {
+export function Letter(props: { id: string; access?: string }) {
   const trpc = useTRPC();
 
-  const openLetter = useQuery(trpc.tegami.open.queryOptions({ id, key }));
+  const openLetter = useQuery(trpc.tegami.open.queryOptions(props));
 
   if (openLetter.isLoading) {
     return <Throbber />;
   } else {
-    return (
-      <Prose urlTransform={transform(id, key)} components={components}>
-        {openLetter.data}
-      </Prose>
-    );
+    return <Prose {...props}>{openLetter.data}</Prose>;
   }
 }
-export function Prose(
-  props: Options & {
-    articleClass?: string;
-    onArticleChange?: React.FormEventHandler<HTMLElement>;
-  },
-) {
+export function Prose(props: {
+  id: string;
+  access?: string;
+  articleClass?: string;
+  onArticleChange?: React.FormEventHandler<HTMLElement>;
+  children: string | null | undefined;
+}) {
   return (
     <article
       onChange={props.onArticleChange}
@@ -44,7 +42,12 @@ export function Prose(
         (props.articleClass ? props.articleClass : "")
       }
     >
-      <Markdown {...props} />
+      <Markdown
+        urlTransform={transform(props.id, props.access)}
+        components={components}
+      >
+        {props.children}
+      </Markdown>
     </article>
   );
 }

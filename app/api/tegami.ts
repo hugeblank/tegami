@@ -59,7 +59,7 @@ export const tegami = router({
     .input(
       z.object({
         id: identifier(),
-        key: z.optional(z.string()).nullable(),
+        access: z.optional(z.string()).nullable(),
       }),
     )
     .output(z.string())
@@ -71,7 +71,7 @@ export const tegami = router({
           let valid = !existsSync(keypath);
           if (!valid) {
             const fkey = (await readFile(path.join(dir, ".key"))).toString();
-            valid = fkey === input.key;
+            valid = fkey === input.access;
           }
           if (valid) {
             try {
