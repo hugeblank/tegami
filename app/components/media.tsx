@@ -85,6 +85,7 @@ export function EmbeddedMedia(props: HTMLProps<HTMLImageElement>) {
       mime={query.data}
       alt={props.alt}
       dialog={type === "image"}
+      key={name}
     />
   );
 }
