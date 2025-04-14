@@ -13,7 +13,13 @@ function transform(id: string, key?: string): (url: string) => string {
 
 const components: Components = {
   img: EmbeddedMedia,
-  p: ({ children }) => <>{children}</>,
+  p: ({ children }) => {
+    if (children !== Object(children)) {
+      return <p>{children}</p>;
+    } else {
+      return <div>{children}</div>;
+    }
+  },
 };
 
 export function Letter(props: { id: string; access?: string }) {
