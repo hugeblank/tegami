@@ -3,16 +3,16 @@ import { LoaderCircle } from "lucide-react";
 export default function Throbber({ large }: { large?: boolean }) {
   if (large)
     return (
-      <div className="flex h-12 gap-2">
+      <div className="flex h-12 items-center justify-center gap-2">
         <LoaderCircle className="h-8 w-8 animate-spin" />
         <p className="text-2xl">Loading...</p>
       </div>
     );
 
   return (
-    <div className="flex gap-2">
+    <div className="flex items-center justify-center gap-2">
       <LoaderCircle className="animate-spin" />
-      <p>Loading...</p>
+      <p className="not-prose">Loading...</p>
     </div>
   );
 }
