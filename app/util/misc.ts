@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 import { readFile } from "fs/promises";
 import path from "path";
-import { isAuthed } from "../api/login";
+import { isAuthed } from "../lib/login.server";
 import { env } from "~/util/env";
 
 export type KeyCheck = { has: boolean; key?: string };
@@ -16,7 +16,7 @@ export async function checkKey(
     const keypath = path.join(dir, ".key");
     if (existsSync(keypath)) {
       const fkey = (await readFile(path.join(dir, ".key"))).toString();
-      if (isAuthed(request) || forceKey) {
+      if ((await isAuthed(request)) || forceKey) {
         return { has: true, key: fkey };
       } else {
         return { has: true };

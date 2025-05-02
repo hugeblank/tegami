@@ -1,6 +1,6 @@
 import { Link, redirect, useNavigate } from "react-router";
 import type { Route } from "./+types/root";
-import { isAuthed } from "~/api/login";
+import { isAuthed } from "~/lib/login.server";
 import { readdir, stat } from "fs/promises";
 import { env } from "~/util/env";
 import { Button } from "~/components/ui/button";
@@ -33,7 +33,7 @@ type Letter = {
 };
 
 export async function loader({ request }: Route.LoaderArgs): Promise<Letter[]> {
-  if (!isAuthed(request)) {
+  if (!(await isAuthed(request))) {
     throw redirect("/login");
   }
   const list = await readdir(env.TEGAMI);

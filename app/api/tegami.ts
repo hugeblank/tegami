@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { publicProcedure, router } from "./trpc";
-import { isAuthed } from "./login";
+import { checkAuthorization } from "../lib/login.server";
 import path from "node:path";
 import { env } from "~/util/env";
 import { existsSync } from "node:fs";
@@ -19,6 +19,10 @@ function fileName() {
 }
 
 export const tegami = router({
+  auth: publicProcedure
+    .input(z.string())
+    .output(z.boolean())
+    .query(({ input }) => checkAuthorization(input)),
   exists: publicProcedure
     .input(identifier())
     .output(z.boolean())
@@ -124,7 +128,7 @@ export const tegami = router({
   delete: publicProcedure
     .input(identifier())
     .mutation(async ({ ctx, input }) => {
-      if (!isAuthed(ctx.req)) {
+      if (!ctx.isAuthed) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
       try {
@@ -144,7 +148,7 @@ export const tegami = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!isAuthed(ctx.req)) {
+      if (!ctx.isAuthed) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
       try {
@@ -157,7 +161,7 @@ export const tegami = router({
       }
     }),
   create: publicProcedure.output(identifier()).mutation(async ({ ctx }) => {
-    if (!isAuthed(ctx.req)) {
+    if (!ctx.isAuthed) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
     const [dir, id] = findPath(env.TEGAMI);
@@ -182,7 +186,7 @@ export const tegami = router({
     )
     .output(z.boolean())
     .mutation(async ({ input, ctx }) => {
-      if (!isAuthed(ctx.req)) {
+      if (!ctx.isAuthed) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
       const dir = path.join(env.TEGAMI, input.id);
@@ -212,7 +216,7 @@ export const tegami = router({
     .input(identifier())
     .output(z.array(z.object({ name: z.string(), type: z.string() })))
     .query(async ({ ctx, input }) => {
-      if (!isAuthed(ctx.req)) {
+      if (!ctx.isAuthed) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
       const p = path.join(env.TEGAMI, input);

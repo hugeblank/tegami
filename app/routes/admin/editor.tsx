@@ -1,5 +1,5 @@
 import type { Route } from "./+types/editor";
-import { isAuthed } from "~/api/login";
+import { isAuthed } from "~/lib/login.server";
 import { checkKey } from "~/util/misc";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAsyncDebouncer } from "@tanstack/react-pacer";
@@ -20,7 +20,8 @@ import { findPath } from "~/util/naming";
 import Throbber from "~/components/throbber";
 
 export async function action({ request, params }: ActionFunctionArgs) {
-  if (!isAuthed(request)) throw new Response("Unauthorized", { status: 400 });
+  if (!(await isAuthed(request)))
+    throw new Response("Unauthorized", { status: 400 });
   const formData = await request.formData();
   const entry = formData.get("media") as File | null;
   if (entry) {
@@ -36,7 +37,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {
-  if (!isAuthed(request)) throw redirect("/login");
+  if (!(await isAuthed(request))) throw redirect("/login");
   const check = await checkKey(params.letter, request);
   // checkKey implicitly checks if letter exists
   if (check) {

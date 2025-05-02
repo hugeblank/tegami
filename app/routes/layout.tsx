@@ -1,9 +1,9 @@
 import { Link, Outlet } from "react-router";
 import type { Route } from "./+types/layout";
-import { isAuthed } from "~/api/login";
+import { isAuthed } from "~/lib/login.server";
 
-export function loader({ request }: Route.LoaderArgs) {
-  return isAuthed(request);
+export async function loader({ request }: Route.LoaderArgs) {
+  return await isAuthed(request);
 }
 
 export default function Layout({ loaderData }: Route.ComponentProps) {

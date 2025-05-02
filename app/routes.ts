@@ -13,7 +13,7 @@ export default [
     route("/admin/:letter", "routes/admin/editor.tsx"),
     route("/media/:letter/:file", "routes/media/root.ts"),
     route("/open/:letter", "routes/open/root.tsx"),
+    route("/login", "routes/admin/login/root.tsx"),
   ]),
-  route("/login", "routes/admin/login.ts"),
   route("/api/trpc/*", "routes/trpc.ts"),
 ] satisfies RouteConfig;

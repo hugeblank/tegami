@@ -5,13 +5,13 @@ import { readFile, stat } from "fs/promises";
 import { fileTypeFromFile } from "file-type";
 import type { Route } from "./+types/root";
 import { createReadStream, existsSync } from "fs";
-import { isAuthed } from "~/api/login";
+import { isAuthed } from "~/lib/login.server";
 import { makeContentRangeHeader, parseRange } from "~/lib/range.server";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const fullpath = path.join(env.TEGAMI, params.letter, params.file);
   const keypath = path.join(env.TEGAMI, params.letter, ".key");
-  let valid = isAuthed(request) || !existsSync(keypath);
+  let valid = (await isAuthed(request)) || !existsSync(keypath);
   if (!valid) {
     try {
       const key = (await readFile(keypath)).toString();
