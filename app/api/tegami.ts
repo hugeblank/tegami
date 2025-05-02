@@ -9,6 +9,7 @@ import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { checkKey, letterExists } from "../util/misc";
 import { findPath } from "~/util/naming";
 import { fileTypeFromBuffer } from "file-type";
+import { authCookie } from "~/lib/cookies.server";
 
 function identifier() {
   return z.string().regex(/[0-9a-f]{10}/);
@@ -22,7 +23,12 @@ export const tegami = router({
   auth: publicProcedure
     .input(z.string())
     .output(z.boolean())
-    .query(({ input }) => checkAuthorization(input)),
+    .query(async ({ input, ctx }) => {
+      const authed = checkAuthorization(input);
+      if (authed)
+        ctx.resHeaders.append("Set-Cookie", await authCookie.serialize(input));
+      return authed;
+    }),
   exists: publicProcedure
     .input(identifier())
     .output(z.boolean())

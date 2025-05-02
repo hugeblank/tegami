@@ -1,4 +1,4 @@
-import { redirect, useFetcher } from "react-router";
+import { useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,24 +12,9 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import { checkAuthorization } from "~/lib/login.server";
-import type { Route } from "./+types/root";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "~/lib/trpc";
 import { useEffect, useState } from "react";
-import { authCookie } from "~/lib/cookies.server";
-
-export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData();
-  const token = formData.get("token")?.toString();
-  if (token && checkAuthorization(token)) {
-    throw redirect("/admin", {
-      headers: {
-        "Set-Cookie": await authCookie.serialize(token),
-      },
-    });
-  }
-}
 
 const FormSchema = z.object({
   username: z.string(),
@@ -51,20 +36,21 @@ export default function Root() {
   const { isSuccess, data } = useQuery(
     useTRPC().tegami.auth.queryOptions(token || skipToken),
   );
-  const { submit } = useFetcher();
+  // const { submit } = useFetcher<typeof action>();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isSuccess && token) {
       if (data) {
-        console.log("here");
         const formData = new FormData();
         formData.append("token", token);
-        submit(formData, { method: "post" });
+        // submit(formData, { method: "post" });
+        navigate("/admin");
       } else {
         form.setError("root", { message: "Invalid username or password" });
       }
     }
-  }, [isSuccess, data, token, submit, form]);
+  }, [isSuccess, data, token, navigate, form]);
 
   async function onSubmit(data: FormType) {
     if (data.username.length === 0) {

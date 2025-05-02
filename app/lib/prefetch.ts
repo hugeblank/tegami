@@ -24,7 +24,7 @@ export const queryClientMiddleware: Route.unstable_MiddlewareFunction = async ({
 export const trpcContext =
   unstable_createContext<TRPCOptionsProxy<AppRouter>>();
 
-export const trpcMiddleware: Route.unstable_MiddlewareFunction = ({
+export const trpcMiddleware: Route.unstable_MiddlewareFunction = async ({
   request,
   context,
 }) => {
@@ -33,7 +33,7 @@ export const trpcMiddleware: Route.unstable_MiddlewareFunction = ({
   context.set(
     trpcContext,
     createTRPCOptionsProxy({
-      ctx: createContext({ req: request }),
+      ctx: await createContext({ req: request }),
       router: appRouter,
       queryClient,
     }),
