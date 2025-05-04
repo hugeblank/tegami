@@ -39,6 +39,12 @@ pnpm build
 
 ## Deployment
 
+First create a `.env` file with:
+
+1. `TEGAMI` set to the path you want the letters and media to reside.
+2. `PORT` set to the external port you'd like to use.
+3. `AUTH` set to a colon separated username and password you'd like to use. Editor instructions go into further detail.
+
 ### Docker Deployment
 
 To build and run using Docker:
