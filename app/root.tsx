@@ -71,12 +71,12 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       error.status === 404
         ? "The requested page could not be found."
         : error.statusText || details;
-  } else if (error && error instanceof Error) {
-    console.error("Non-route error:", error);
-    details = error.message;
-    stack = error.stack;
   } else {
-    console.error("Panic I guess... ", error);
+    console.error("Non-route error:", error);
+    if (error instanceof Error) {
+      details = error.message;
+      stack = error.stack;
+    }
   }
 
   return (
