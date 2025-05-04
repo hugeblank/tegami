@@ -45,7 +45,7 @@ export default function Home() {
     },
   });
 
-  const { exists: existsQuery, unlock: unlockQuery } = useTRPC().tegami;
+  const { exists: existsQuery, unlock: unlockQuery } = useTRPC();
   const watch = useWatch<FormType>({ control: form.control });
   const [sema, setSema] = useState(false);
   const exists = useQuery(

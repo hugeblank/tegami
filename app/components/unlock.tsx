@@ -32,7 +32,7 @@ export default function Unlock({
     React.Dispatch<React.SetStateAction<KeyCheck | undefined>>,
   ];
 }) {
-  const { checkKey, unlock } = useTRPC().tegami;
+  const { checkKey, unlock } = useTRPC();
   const lsid = `letter-${id}`;
   const [access, setAccess] = accessState;
   const [attemptUnlock, setAttempt] = useState<KeyCheck>();

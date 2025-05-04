@@ -54,7 +54,7 @@ export function MediaBrowser({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const listMedia = useQuery(useTRPC().tegami.listMedia.queryOptions(id));
+  const listMedia = useQuery(useTRPC().listMedia.queryOptions(id));
   const submit = useSubmit();
 
   async function onInput() {
@@ -133,9 +133,7 @@ export function MediaCard({
   info: { name: string; type: string };
   refresh: () => unknown;
 }) {
-  const removeMedia = useMutation(
-    useTRPC().tegami.deleteMedia.mutationOptions(),
-  );
+  const removeMedia = useMutation(useTRPC().deleteMedia.mutationOptions());
   const [inserted, setInsert] = useState(false);
 
   async function onDelete() {

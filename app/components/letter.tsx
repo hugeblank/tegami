@@ -23,9 +23,9 @@ const components: Components = {
 };
 
 export function Letter(props: { id: string; access?: string }) {
-  const trpc = useTRPC();
+  const { open } = useTRPC();
 
-  const openLetter = useQuery(trpc.tegami.open.queryOptions(props));
+  const openLetter = useQuery(open.queryOptions(props));
 
   if (openLetter.isLoading) {
     return <Throbber />;

@@ -50,7 +50,7 @@ export default function EditorRoute({
   params,
   loaderData,
 }: Route.ComponentProps) {
-  const { save, open } = useTRPC().tegami;
+  const { save, open } = useTRPC();
   const {
     isError: saveLetterErrored,
     isPending: saveLetterPending,

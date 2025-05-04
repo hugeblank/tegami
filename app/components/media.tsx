@@ -62,7 +62,7 @@ export function Media({
 }
 
 export function EmbeddedMedia(props: HTMLProps<HTMLImageElement>) {
-  const { mime } = useTRPC().tegami;
+  const { mime } = useTRPC();
   const [, , id, garbage] = props.src!.split("/");
   const [name, moregarbage] = garbage.split("?");
   const key = moregarbage ? moregarbage.split("=")[1] : undefined;

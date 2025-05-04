@@ -51,8 +51,9 @@ export async function loader({ request }: Route.LoaderArgs): Promise<Letter[]> {
 }
 
 export default function Root({ loaderData }: Route.ComponentProps) {
-  const createLetter = useMutation(useTRPC().tegami.create.mutationOptions());
-  const deleteLetter = useMutation(useTRPC().tegami.delete.mutationOptions());
+  const { create, remove } = useTRPC();
+  const createLetter = useMutation(create.mutationOptions());
+  const deleteLetter = useMutation(remove.mutationOptions());
   const [letters, setLetters] = useState(loaderData);
   const navigate = useNavigate();
   async function initLetter() {

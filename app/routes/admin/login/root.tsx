@@ -34,7 +34,7 @@ export default function Root() {
 
   const [token, setToken] = useState<string | undefined>();
   const { isSuccess, data } = useQuery(
-    useTRPC().tegami.auth.queryOptions(token || skipToken),
+    useTRPC().auth.queryOptions(token || skipToken),
   );
   // const { submit } = useFetcher<typeof action>();
   const navigate = useNavigate();
