@@ -17,6 +17,7 @@ export function meta({}: Route.MetaArgs) {
 export function loader({ params }: Route.LoaderArgs) {
   if (!letterExists(params.letter))
     throw new Response("Not found", { status: 404 });
+  return {};
 }
 
 export default function Root({ params }: Route.ComponentProps) {
