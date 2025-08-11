@@ -2,7 +2,7 @@ import { publicProcedure, router } from "~/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { fileTypeFromBuffer } from "file-type";
 import { existsSync } from "fs";
-import { readFile, rm, mkdir, writeFile, readdir } from "fs/promises";
+import { readFile, rm, mkdir, writeFile, readdir, stat } from "fs/promises";
 import path from "path";
 import { authCookie } from "~/lib/cookies.server";
 import { checkAuthorization } from "~/lib/login.server";
@@ -227,19 +227,24 @@ export const appRouter = router({
       }
       const p = path.join(env.TEGAMI, input);
       const dir = await readdir(p);
-      return await Promise.all(
-        dir
-          .filter((v) => !(v === "index.md" || v === ".key"))
-          .map(async (v) => {
-            const res = await fileTypeFromBuffer(
-              await readFile(path.join(p, v)),
-            );
-            return {
-              name: v,
-              type: res ? res.mime : "text/plain",
-            };
-          }),
-      );
+      return (
+        await Promise.all(
+          dir
+            .filter((v) => !(v === "index.md" || v === ".key"))
+            .map(async (v) => {
+              const loc = path.join(p, v);
+              const [fstat, res] = await Promise.all([
+                stat(loc),
+                fileTypeFromBuffer(await readFile(loc)),
+              ]);
+              return {
+                name: v,
+                type: res ? res.mime : "text/plain",
+                atime: fstat.mtimeMs,
+              };
+            }),
+        )
+      ).sort((a, b) => a.atime - b.atime);
     }),
   mime: publicProcedure
     .input(
