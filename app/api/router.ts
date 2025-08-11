@@ -244,7 +244,7 @@ export const appRouter = router({
               };
             }),
         )
-      ).sort((a, b) => a.atime - b.atime);
+      ).sort((a, b) => b.atime - a.atime);
     }),
   mime: publicProcedure
     .input(
