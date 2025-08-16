@@ -42,7 +42,7 @@ export function Media({
     return (
       <Dialog>
         <DialogTrigger asChild>
-          <img src={src} alt={alt} className={className} />
+          <img src={src} alt={alt} loading="lazy" className={className} />
         </DialogTrigger>
         <DialogContent
           className={"flex h-11/12 w-11/12 flex-col sm:max-w-[unset]"}
