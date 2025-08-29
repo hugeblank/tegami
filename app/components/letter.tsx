@@ -5,10 +5,15 @@ import { useQuery } from "@tanstack/react-query";
 import Throbber from "./throbber";
 
 function transform(id: string, key?: string): (url: string) => string {
-  return (url: string) =>
-    defaultUrlTransform(
-      `/media/${id}/${url.replace(/^\.\//, "")}${key ? `?key=${key}` : ""}`,
-    );
+  return (url: string) => {
+    if (url.startsWith("./")) {
+      return defaultUrlTransform(
+        `/media/${id}/${url.replace(/^\.\//, "")}${key ? `?key=${key}` : ""}`,
+      );
+    } else {
+      return defaultUrlTransform(url);
+    }
+  };
 }
 
 const components: Components = {
