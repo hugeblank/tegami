@@ -18,6 +18,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from "~/components/ui/dialog";
+import { getMetadata } from "~/util/misc.server";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -28,6 +29,7 @@ export function meta({}: Route.MetaArgs) {
 
 type Letter = {
   name: string;
+  title: string | undefined;
   created: Date;
   modified: Date;
 };
@@ -40,9 +42,11 @@ export async function loader({ request }: Route.LoaderArgs): Promise<Letter[]> {
   return await Promise.all(
     list.map(async (name) => {
       const dir = path.join(env.TEGAMI, name, "index.md");
+      const { title } = await getMetadata(name);
       const stats = await stat(dir);
       return {
         name,
+        title,
         created: stats.birthtime,
         modified: stats.mtime,
       };
@@ -82,7 +86,7 @@ export default function Root({ loaderData }: Route.ComponentProps) {
                     className="text-xl text-blue-500 hover:underline"
                     to={letter.name}
                   >
-                    {letter.name}
+                    {letter.title ?? letter.name}
                   </Link>
                   <Dialog>
                     <DialogTrigger>

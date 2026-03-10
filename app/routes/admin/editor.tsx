@@ -1,6 +1,6 @@
 import type { Route } from "./+types/editor";
 import { isAuthed } from "~/lib/login.server";
-import { checkKey } from "~/util/misc";
+import { getMetadata } from "~/util/misc.server";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAsyncDebouncer } from "@tanstack/react-pacer";
 import { useTRPC } from "~/lib/trpc";
@@ -38,12 +38,12 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   if (!(await isAuthed(request))) throw redirect("/login");
-  const check = await checkKey(params.letter, request);
-  // checkKey implicitly checks if letter exists
-  if (check) {
-    return check;
+  try {
+    // getMetadata implicitly checks if letter exists
+    return await getMetadata(params.letter);
+  } catch {
+    throw new Response("Not found", { status: 404 });
   }
-  throw new Response("Not found", { status: 404 });
 }
 
 export default function EditorRoute({
@@ -69,6 +69,7 @@ export default function EditorRoute({
   const form = useEditorForm();
   const { setValue, setError, clearErrors, control } = form;
   const text = useWatch<EditorSchema>({ control, name: "text" });
+  const title = useWatch<EditorSchema>({ control, name: "title" });
   const key = useWatch<EditorSchema>({ control, name: "key" });
 
   const { maybeExecute: saveLetter } = useAsyncDebouncer(saveLetterAsync, {
@@ -79,16 +80,24 @@ export default function EditorRoute({
     saveLetter({
       id: params.letter,
       key: key.length > 0 ? key : undefined,
+      title: title.length > 0 ? title : undefined,
       letter: text,
     });
-  }, [text, key, params.letter, saveLetter]);
+  }, [text, key, params.letter, saveLetter, title]);
 
   useEffect(() => {
     if (isOpenLetterSuccess) {
-      setValue("text", letterData);
+      setValue("text", letterData ?? "");
+      setValue("title", loaderData.title ?? "");
       setValue("key", loaderData.key ?? "");
     }
-  }, [setValue, loaderData.key, isOpenLetterSuccess, letterData]);
+  }, [
+    setValue,
+    loaderData.key,
+    letterData,
+    loaderData.title,
+    isOpenLetterSuccess,
+  ]);
 
   useEffect(() => {
     if (saveLetterErrored) {

@@ -27,6 +27,7 @@ import { toast } from "sonner";
 const FormSchema = z.object({
   text: z.string(),
   key: z.string(),
+  title: z.string(),
   state: z.enum(["saved", "saving", "modified", "errored"]),
 });
 
@@ -46,6 +47,7 @@ export function useEditorForm() {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       key: "",
+      title: "",
       text: "",
       state: "saved",
     },
@@ -86,9 +88,27 @@ export default function Editor({
       <form className="w-1/2">
         <div className="flex h-full w-full flex-col">
           <FormMessage />
-          <div className="mx-4 mb-2 flex flex-col gap-2 lg:flex-row">
-            <div className="flex gap-2">
-              <p className="place-self-center">{stateElements.get(state)}</p>
+          <div className="flex flex-col lg:flex-row">
+            <div className="mb-2 ml-4 flex flex-col gap-2 lg:flex-row">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => {
+                  return (
+                    <FormItem className="flex gap-1">
+                      <FormLabel>Title:</FormLabel>
+                      <FormControl>
+                        <Input
+                          className="w-fit"
+                          placeholder="Title"
+                          {...field}
+                          onInput={onUpdate}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  );
+                }}
+              />
               <FormField
                 control={form.control}
                 name="key"
@@ -115,15 +135,20 @@ export default function Editor({
                 }}
               />
             </div>
-            <div className="flex gap-2">
-              <MediaBrowser
-                id={id}
-                accessKey={accessKey}
-                setText={(tag: string) => form.setValue("text", text + tag)}
-              ></MediaBrowser>
-              <Button type="button" onClick={onShare}>
-                Share <Share />
-              </Button>
+            <div className="mx-4 mb-2 flex flex-row gap-2">
+              <div className="flex gap-2">
+                <p className="place-self-center">{stateElements.get(state)}</p>
+              </div>
+              <div className="flex gap-2">
+                <MediaBrowser
+                  id={id}
+                  accessKey={accessKey}
+                  setText={(tag: string) => form.setValue("text", text + tag)}
+                ></MediaBrowser>
+                <Button type="button" onClick={onShare}>
+                  Share <Share />
+                </Button>
+              </div>
             </div>
           </div>
           <FormField

@@ -7,7 +7,7 @@ import path from "path";
 import { authCookie } from "~/lib/cookies.server";
 import { checkAuthorization } from "~/lib/login.server";
 import { env } from "~/util/env";
-import { letterExists, checkKey } from "~/util/misc";
+import { letterExists, getMetadata } from "~/util/misc.server";
 import { findPath } from "~/util/naming";
 import { z } from "zod";
 
@@ -19,6 +19,7 @@ export function identifier() {
 export function fileName() {
   return z.string().regex(/[0-9a-f]{10}\.[0-9a-z]{2,4}/);
 }
+
 export const appRouter = router({
   auth: publicProcedure
     .input(z.string())
@@ -41,21 +42,15 @@ export const appRouter = router({
       }),
     )
     .output(z.boolean())
-    .query(async ({ input }) => {
-      const dir = path.join(env.TEGAMI, input.id);
-      if (existsSync(dir)) {
+    .query(async ({ input, ctx }) => {
+      if (letterExists(input.id)) {
         try {
-          const keypath = path.join(dir, ".key");
-          let valid = !existsSync(keypath);
-          if (!valid) {
-            const fkey = (await readFile(path.join(dir, ".key"))).toString();
-            valid = fkey === input.key;
-          }
-          return valid;
+          const { key } = await getMetadata(input.id);
+          return key === input.key || ctx.isAuthed;
         } catch {
           throw new TRPCError({
             code: "UNPROCESSABLE_CONTENT",
-            message: `Error parsing key for letter ${input.id}`,
+            message: `Error parsing metadata for letter ${input.id}`,
           });
         }
       } else {
@@ -73,19 +68,15 @@ export const appRouter = router({
       }),
     )
     .output(z.string())
-    .query(async ({ input }) => {
-      const dir = path.join(env.TEGAMI, input.id);
-      if (existsSync(dir)) {
+    .query(async ({ input, ctx }) => {
+      if (letterExists(input.id)) {
         try {
-          const keypath = path.join(dir, ".key");
-          let valid = !existsSync(keypath);
-          if (!valid) {
-            const fkey = (await readFile(path.join(dir, ".key"))).toString();
-            valid = fkey === input.access;
-          }
-          if (valid) {
+          const { key } = await getMetadata(input.id);
+          if (key === input.access || ctx.isAuthed) {
             try {
-              return (await readFile(path.join(dir, "index.md"))).toString();
+              return (
+                await readFile(path.join(env.TEGAMI, input.id, "index.md"))
+              ).toString();
             } catch {
               throw new TRPCError({
                 code: "UNPROCESSABLE_CONTENT",
@@ -111,25 +102,22 @@ export const appRouter = router({
         });
       }
     }),
-  checkKey: publicProcedure
-    .input(identifier())
-    .output(z.object({ has: z.boolean(), key: z.optional(z.string()) }))
-    .query(async ({ input, ctx }) => {
-      try {
-        const check = await checkKey(input, ctx.req);
-        if (check) {
-          return check;
-        }
-      } catch {
-        throw new TRPCError({
-          code: "UNPROCESSABLE_CONTENT",
-          message: `Error parsing key for letter ${input}`,
-        });
-      }
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: `No such letter with id ${input}`,
-      });
+  getTitles: publicProcedure
+    .input(z.array(identifier()))
+    .output(z.array(z.string().optional()))
+    .query(async ({ input }) => {
+      return Promise.all(
+        input.map(async (input) => {
+          if (letterExists(input)) {
+            try {
+              return (await getMetadata(input)).title;
+            } catch {
+              return undefined;
+            }
+          }
+          return undefined;
+        }),
+      );
     }),
   remove: publicProcedure
     .input(identifier())
@@ -142,7 +130,7 @@ export const appRouter = router({
       } catch (e) {
         throw new TRPCError({
           code: "UNPROCESSABLE_CONTENT",
-          message: `Error creating letter: ${e}`,
+          message: `Error removing letter: ${e}`,
         });
       }
     }),
@@ -174,6 +162,7 @@ export const appRouter = router({
     try {
       await mkdir(dir);
       await writeFile(path.join(dir, "index.md"), "");
+      await writeFile(path.join(dir, ".meta.json"), "{}");
     } catch (e) {
       throw new TRPCError({
         code: "UNPROCESSABLE_CONTENT",
@@ -188,6 +177,7 @@ export const appRouter = router({
         id: identifier(),
         letter: z.string(),
         key: z.string().optional(),
+        title: z.string().optional(),
       }),
     )
     .output(z.boolean())
@@ -204,12 +194,13 @@ export const appRouter = router({
       }
       try {
         await writeFile(path.join(dir, "index.md"), input.letter);
-        const keypath = path.join(dir, ".key");
-        if (input.key) {
-          await writeFile(keypath, input.key);
-        } else if (existsSync(keypath)) {
-          await rm(keypath);
-        }
+        await writeFile(
+          path.join(dir, ".meta.json"),
+          JSON.stringify({
+            key: input.key,
+            title: input.title,
+          }),
+        );
         return true;
       } catch (e) {
         throw new TRPCError({
@@ -230,7 +221,7 @@ export const appRouter = router({
       return (
         await Promise.all(
           dir
-            .filter((v) => !(v === "index.md" || v === ".key"))
+            .filter((v) => !(v === "index.md" || v.startsWith(".")))
             .map(async (v) => {
               const loc = path.join(p, v);
               const [fstat, res] = await Promise.all([
@@ -255,10 +246,10 @@ export const appRouter = router({
       }),
     )
     .output(z.string())
-    .query(async ({ input, ctx }) => {
+    .query(async ({ input }) => {
       try {
-        const check = await checkKey(input.id, ctx.req, true);
-        if (check && input.key === check.key) {
+        const meta = await getMetadata(input.id);
+        if (input.key === meta.key || !meta.has) {
           const res = await fileTypeFromBuffer(
             await readFile(path.join(env.TEGAMI, input.id, input.name)),
           );

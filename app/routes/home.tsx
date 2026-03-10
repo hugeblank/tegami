@@ -25,7 +25,7 @@ export const links: Route.LinksFunction = () => [
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "手紙" },
-    { name: "description", content: "Welcome to my Jebsite!" },
+    { name: "description", content: "Tegami - Letter host" },
   ];
 }
 
@@ -45,7 +45,11 @@ export default function Home() {
     },
   });
 
-  const { exists: existsQuery, unlock: unlockQuery } = useTRPC();
+  const {
+    exists: existsQuery,
+    unlock: unlockQuery,
+    getTitles: getTitlesQuery,
+  } = useTRPC();
   const watch = useWatch<FormType>({ control: form.control });
   const [sema, setSema] = useState(false);
   const exists = useQuery(
@@ -65,6 +69,7 @@ export default function Home() {
     ),
   );
   const [letters, setLetters] = useState<string[]>([]);
+  const titles = useQuery(getTitlesQuery.queryOptions(letters));
 
   const navigate = useNavigate();
 
@@ -169,7 +174,7 @@ export default function Home() {
             to={`/open/${v}`}
             key={i}
           >
-            {v}
+            {titles.isSuccess ? titles.data[i] : v}
           </Link>
         );
       })}

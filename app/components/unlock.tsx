@@ -1,5 +1,5 @@
 import { useTRPC } from "~/lib/trpc";
-import { skipToken, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useForm } from "react-hook-form";
@@ -14,29 +14,29 @@ import {
   FormMessage,
 } from "./ui/form";
 import { useEffect, useState } from "react";
-import type { KeyCheck } from "~/util/misc";
 import { MailOpen } from "lucide-react";
 import Throbber from "./throbber";
 
 const FormSchema = z.object({
-  accessKey: z.string(),
+  accessKey: z.string().optional(),
 });
 
 export default function Unlock({
   id,
-  accessState,
+  accessState: [, setAccess],
+  setOpen,
 }: {
   id: string;
   accessState: [
-    KeyCheck | undefined,
-    React.Dispatch<React.SetStateAction<KeyCheck | undefined>>,
+    string | undefined,
+    React.Dispatch<React.SetStateAction<string | undefined>>,
   ];
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const { checkKey, unlock } = useTRPC();
+  const { unlock } = useTRPC();
   const lsid = `letter-${id}`;
-  const [access, setAccess] = accessState;
-  const [attemptUnlock, setAttempt] = useState<KeyCheck>();
-  const [localAttempt, setLocalAttempt] = useState(false);
+  const [attempt, setAttempt] = useState<string>();
+  const [localUsed, setLocalAttempt] = useState(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -46,126 +46,110 @@ export default function Unlock({
   });
 
   const {
-    // Check if there's a key at all. If authed, key is provided.
-    isSuccess: checkKeySuccess,
-    data: keyResult,
-    isLoading: checkKeyLoading,
-  } = useQuery(checkKey.queryOptions(id));
-
-  const {
     // Attempt to unlock the letter with the given key
     data: unlocked,
     isLoading: unlockLoading,
     isSuccess: unlockQuerySuccess,
-  } = useQuery(
-    unlock.queryOptions(
-      attemptUnlock ? { id, key: attemptUnlock.key } : skipToken,
-    ),
-  );
+  } = useQuery(unlock.queryOptions({ id, key: attempt }));
 
   // Attempt to load key from localStorage
   useEffect(() => {
-    if (!attemptUnlock && !localAttempt) {
-      // If no attempt at a local unlock has been attempted
-      if (checkKeySuccess && keyResult.has) {
-        // And the server says there is a key
-        if (keyResult.key) {
-          // And it's being provided, just set it.
-          setAccess(keyResult);
-          setLocalAttempt(true);
-        } else {
-          // Otherwise we have to guess, starting from localStorage
-          const item = localStorage.getItem(lsid);
-          if (item) {
-            setAttempt({ has: true, key: item });
-            setLocalAttempt(true);
+    if (!localUsed) {
+      if (typeof attempt !== "string") {
+        // Attempt unlock from localStorage
+        const item = localStorage.getItem(lsid);
+        if (item) setAttempt(item);
+      }
+      if (unlockQuerySuccess) {
+        // If the given attempt successfully unlocked the letter
+        if (unlocked) {
+          // Pass it along to access & set it in localStorage
+          if (attempt) {
+            localStorage.removeItem(`cache-${id}`);
+            localStorage.setItem(lsid, attempt);
+          } else {
+            localStorage.removeItem(lsid);
+            localStorage.setItem(`cache-${id}`, "");
           }
+          setAccess(attempt);
+          setOpen(true);
         }
-      } else if (checkKeySuccess) {
-        // Otherwise if there is not a key
-        localStorage.setItem(`cache-${id}`, "");
-        setAccess(keyResult);
         setLocalAttempt(true);
       }
     }
-
-    // If a local unlock has been attempted, and didn't unlock the letter
-    if (attemptUnlock && localAttempt && unlockQuerySuccess && !unlocked) {
-      // clear localStorage & reset attempt
-      localStorage.removeItem(lsid);
-      setAttempt(undefined);
-    }
-
-    // If the given attempt successfully unlocked the letter
-    if (attemptUnlock && unlockQuerySuccess && unlocked) {
-      // Pass it along to access & set it in localStorage
-      setAccess(attemptUnlock);
-      if (attemptUnlock.key) localStorage.setItem(lsid, attemptUnlock.key);
-    }
   }, [
-    checkKeySuccess,
-    keyResult,
     lsid,
-    attemptUnlock,
-    setAccess,
+    attempt,
     setLocalAttempt,
     unlockQuerySuccess,
     unlocked,
-    localAttempt,
+    localUsed,
     id,
+    setAccess,
+    setOpen,
   ]);
 
   // Handle form
   useEffect(() => {
-    if (
-      !attemptUnlock ||
-      !attemptUnlock.key ||
-      attemptUnlock.key.length === 0
-    ) {
+    console.log(attempt);
+    if (typeof attempt !== "string") {
       form.clearErrors("accessKey");
     } else if (!unlocked && unlockQuerySuccess) {
       form.setError("accessKey", { message: "Incorrect access key" });
+    } else if (unlocked && unlockQuerySuccess) {
+      localStorage.removeItem(`cache-${id}`);
+      localStorage.setItem(lsid, attempt);
+      setAccess(attempt);
+      setOpen(true);
     }
-  }, [attemptUnlock, form, unlockQuerySuccess, unlocked]);
-
-  if (checkKeyLoading && unlockLoading) {
-    return <Throbber />;
-  }
+  }, [
+    attempt,
+    setOpen,
+    form,
+    setAccess,
+    unlockQuerySuccess,
+    unlocked,
+    lsid,
+    id,
+  ]);
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    setAttempt({ has: true, key: data.accessKey });
+    setAttempt(data.accessKey);
   }
 
-  if (!access && keyResult?.has) {
+  if (!unlocked) {
     return (
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <FormField
-            control={form.control}
-            name="accessKey"
-            render={({ field }) => {
-              return (
-                <FormItem>
-                  <FormLabel>Key</FormLabel>
-                  <div className="flex flex-col gap-2">
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Access Key"
-                        {...field}
-                      />
-                    </FormControl>
-                    <Button type="submit">
-                      Open Letter <MailOpen />
-                    </Button>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
-          />
-        </form>
-      </Form>
+      <>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <FormField
+              control={form.control}
+              name="accessKey"
+              render={({ field }) => {
+                return (
+                  <FormItem>
+                    <FormLabel>Key</FormLabel>
+                    <div className="flex flex-col gap-2">
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Access Key"
+                          {...field}
+                        />
+                      </FormControl>
+                      <Button type="submit">
+                        Open Letter <MailOpen />
+                      </Button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+          </form>
+        </Form>
+        {unlockLoading && <Throbber />}
+      </>
     );
   }
 }
