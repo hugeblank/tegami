@@ -18,7 +18,9 @@ RUN pnpm run build
 
 FROM pnpm
 COPY ./package.json pnpm-lock.yaml /app/
+RUN true
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
+RUN true
 COPY --from=build-env /app/build /app/build
 WORKDIR /app
 CMD ["pnpm", "run", "start"]

@@ -1,7 +1,7 @@
 import { env } from "~/util/env";
 import path from "path";
 import { createReadableStreamFromReadable } from "@react-router/node";
-import { readFile, stat } from "fs/promises";
+import { stat } from "fs/promises";
 import { fileTypeFromFile } from "file-type";
 import type { Route } from "./+types/root";
 import { createReadStream, existsSync } from "fs";
@@ -25,9 +25,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   if (!(await isAuthed(request))) {
     try {
+      const urlKey = new URL(request.url).searchParams.get("key");
       const { key } = await getMetadata(params.letter);
       const mime = await fileTypeFromFile(fullpath);
-      if (key === new URL(request.url).searchParams.get("key")) {
+      if (key === urlKey || (!key && !urlKey)) {
         if (mime) {
           const type = mime.mime.split("/")[0];
           if (type === "video" || type === "audio") {
@@ -74,11 +75,24 @@ export async function loader({ params, request }: Route.LoaderArgs) {
               },
               status: parsedRange ? 206 : 200,
             });
+          } else {
+            return new Response(
+              createReadableStreamFromReadable(createReadStream(fullpath)),
+              {
+                status: 200,
+                headers: {
+                  "Content-Type": mime.mime,
+                },
+              },
+            );
           }
         }
-        return new Response((await readFile(fullpath)).toString("binary"), {
-          status: 200,
-        });
+        return new Response(
+          createReadableStreamFromReadable(createReadStream(fullpath)),
+          {
+            status: 200,
+          },
+        );
       }
     } catch {
       throw new Response("Failed to read letter metadata", {
